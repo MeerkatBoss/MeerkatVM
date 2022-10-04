@@ -33,6 +33,8 @@ add_subdirectory(lib/logger)
 
 add_subdirectory(lib/stack)
 
+add_subdirectory(lib/text_lines)
+
 add_subdirectory(lib/asm)
 
 add_subdirectory(src/asm)

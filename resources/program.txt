@@ -1,0 +1,9 @@
+push 50
+push 30
+sub
+push 5
+push 3
+sub
+div
+pop
+halt
