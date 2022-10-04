@@ -31,8 +31,6 @@ set(CMAKE_LINKER_FLAGS "${CMAKE_CXX_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wall 
 
 add_subdirectory(lib/logger)
 
-add_subdirectory(lib/utils)
-
 add_subdirectory(lib/stack)
 
 add_subdirectory(lib/asm)
@@ -43,7 +41,7 @@ add_subdirectory(src/disasm)
 
 add_subdirectory(src/vcpu)
 
-install(TARGETS quad
+install(TARGETS asm disasm vcpu
         RUNTIME
         CONFIGURATIONS Release)
 

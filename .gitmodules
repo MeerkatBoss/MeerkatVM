@@ -1,3 +1,6 @@
 [submodule "lib/logger"]
 	path = lib/logger
 	url = https://github.com/MeerkatBoss/logger.git
+[submodule "lib/stack"]
+	path = lib/stack
+	url = https://github.com/MeerkatBoss/libstack.git
