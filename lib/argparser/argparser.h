@@ -20,7 +20,7 @@
  * @param[in] strargs Parameter array
  * @return 0 upon sucessful parse, -1 otherwise 
  */
-typedef int arg_callback(const char** strparams);
+typedef int arg_callback(const char* const* strparams);
 
 /**
  * @brief 
@@ -46,7 +46,7 @@ struct arg_tag
  * @param[in] tags      Argument descriptions array
  * @return 0 upon successful parse, -1 otherwise
  */
-int parse_args(size_t arg_count, const char** strargs, size_t tag_count, const arg_tag* tags);
+int parse_args(size_t arg_count, const char* const* strargs, size_t tag_count, const arg_tag* tags);
 
 /**
  * @brief 

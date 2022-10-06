@@ -63,9 +63,23 @@ const command_description COMMANDS[] =
 
 /**
  * @brief 
+ * Length of `COMMANDS` array
+ */
+const size_t COMMAND_COUNT = sizeof(COMMANDS) / sizeof(*COMMANDS);
+
+/**
+ * @brief 
+ * Maximum number of arguments required for command
+ */
+const size_t MAX_CMD_ARGS = 1;
+
+/**
+ * @brief 
  * Required executable signature
  */
-const char SIGNATURE[] = "MKBS";
+#define SIGNATURE {'M', 'K', 'B', 'S'}
+
+const char STR_SIGN[5] = SIGNATURE;
 
 /**
  * @brief 
@@ -77,7 +91,7 @@ const unsigned int LATEST_VERSION = 0;
  * @brief 
  * Length of executable file header
  */
-const unsigned int HEADER_SIZE = 16;
+const long HEADER_SIZE = 16;
 
 #pragma pack(push)
 #pragma pack(1)
@@ -89,7 +103,7 @@ struct file_header
 {
     char signature[4];
     unsigned int version;
-    unsigned int opcnt;
+    size_t opcnt;
 };
 #pragma pack(pop)
 
@@ -98,7 +112,7 @@ struct file_header
  * If `file_header` fits in `HEADER_SIZE` bytes this is equal
  * to `HEADER_SIZE`, -1 otherwise (will cause compilation error)
  */
-const unsigned int RZVD_SIZE = sizeof(file_header) <= HEADER_SIZE ? HEADER_SIZE : -1;
+const long RZVD_SIZE = sizeof(file_header) <= HEADER_SIZE ? HEADER_SIZE : -1;
 
 /**
  * @brief 

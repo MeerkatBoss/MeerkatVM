@@ -28,6 +28,8 @@ set(CMAKE_LINKER_FLAGS "${CMAKE_CXX_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wall 
     -Wsuggest-override -Wswitch-default -Wswitch-enum -Wsync-nand -Wundef -Wunreachable-code\
     -Wunused -Wuseless-cast -Wvariadic-macros -Wno-literal-suffix -Wno-missing-field-initializers\
     -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector") 
+  
+#set(ARGS "")
 
 add_subdirectory(lib/logger)
 
@@ -48,6 +50,10 @@ add_subdirectory(src/vcpu)
 install(TARGETS asm disasm vcpu
         RUNTIME
         CONFIGURATIONS Release)
+
+# add_custom_target(run
+#         COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && ${CMAKE_CURRENT_BINARY_DIR}/src/asm/asm $ENV{ARGS}
+#         DEPENDS asm)
 
 if(NOT TARGET uninstall)
   configure_file(

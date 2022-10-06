@@ -7,7 +7,7 @@
 static const arg_tag* find_tag(const char* str, size_t tag_count, const arg_tag* tags);
 static int compare_tag(const char* str, const arg_tag* tag);
 
-int parse_args(size_t arg_count, const char** strargs, size_t tag_count, const arg_tag* tags)
+int parse_args(size_t arg_count, const char* const* strargs, size_t tag_count, const arg_tag* tags)
 {
     LOG_ASSERT(strargs != NULL, return -1);
     LOG_ASSERT(tags != NULL, return -1);
@@ -24,7 +24,7 @@ int parse_args(size_t arg_count, const char** strargs, size_t tag_count, const a
         int call_result = tag->callback(strargs + i + 1);
 
         LOG_ASSERT_ERROR(
-            tag != NULL, return -1,
+            call_result != -1, return -1,
             "Error parsing command-line option \'%s\'", strargs[i]);
         
         i += tag->parameter_count;
@@ -51,13 +51,6 @@ void print_help(size_t tag_count, const arg_tag* tags)
 static const arg_tag* find_tag(const char* str, size_t tag_count, const arg_tag* tags)
 {
     LOG_ASSERT(str[0] != '\0', return NULL);
-    int n_dashes = 0;
-
-    while(*str == '-')
-    {
-        str++;
-        n_dashes++;
-    }
     
     for (size_t i = 0; i < tag_count; i++)
         if (compare_tag(str, &tags[i]))
@@ -77,6 +70,6 @@ static int compare_tag(const char* str, const arg_tag* tag)
     }
 
     return
-        n_dashes == 1 && str[1] == '\0' && str[0] == tag->short_tag ||
-        n_dashes == 2 && strcmp(str, tag->long_tag) == 0;
+        (n_dashes == 1 && str[1] == '\0' && str[0] == tag->short_tag) ||
+        (n_dashes == 2 && strcmp(str, tag->long_tag) == 0);
 }
