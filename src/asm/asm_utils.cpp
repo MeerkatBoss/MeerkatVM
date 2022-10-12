@@ -83,11 +83,11 @@ void try_print_listing(const TextLines text_lines, const void* cmd_array)
 
     for (size_t i = 0; i < text_lines.line_count; i++)
     {
-        fprintf(listing, "%zu:\t%18s\t%d", i + 1, text_lines.lines[i].line, *int_cmd);
+        fprintf(listing, "%zu:\t%24s|\t%04x", i + 1, text_lines.lines[i].line, *int_cmd);
         size_t arg_count = COMMANDS[*int_cmd].arg_count;
         int_cmd++;
         for (size_t j = 0; j < arg_count; j++)
-            fprintf(listing, " %d", *(int_cmd++));
+            fprintf(listing, " %04x", *(int_cmd++));
         fputc('\n', listing);
     }
 }

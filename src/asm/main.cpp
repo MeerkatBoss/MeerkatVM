@@ -75,5 +75,5 @@ int main(int argc, char** argv)
 
     free(command_array);
     dispose_lines(&text_lines);
-    return 0;
+    return STATUS_SUCCESS;
 }
