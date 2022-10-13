@@ -20,7 +20,7 @@
  * @brief 
  * Byte-codes of virtual CPU instructions
  */
-enum cpu_command : char
+enum cpu_command
 {
     #include "asm_cmd.h"
 };
@@ -37,7 +37,8 @@ enum arg_perms
 {
     ARG_RD      = 01,
     ARG_WR      = 02,
-    ARG_RDWR    = ARG_RD | ARG_WR
+    ARG_RDWR    = ARG_RD | ARG_WR,
+    ARG_LABEL   = 04
 };
 
 /**
