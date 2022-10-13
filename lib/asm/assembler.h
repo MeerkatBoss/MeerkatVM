@@ -14,23 +14,60 @@
 
 #include <stddef.h>
 
+#define ASM_CMD(name, num, ...) CMD_##name=num,
+
 /**
  * @brief 
  * Byte-codes of virtual CPU instructions
  */
-enum asm_command
+enum cpu_command : char
 {
-    CMD_NOP     = 0x00,
-    CMD_ADD     = 0x01,
-    CMD_INC     = 0x02,
-    CMD_SUB     = 0x03,
-    CMD_DEC     = 0x04,
-    CMD_MUL     = 0x05,
-    CMD_DIV     = 0x06,
-    CMD_PUSH    = 0x07,
-    CMD_POP     = 0x08,
-    CMD_HALT    = 0x09
+    #include "asm_cmd.h"
 };
+
+#undef ASM_CMD
+
+const size_t ARG_MAX = 1;
+
+/**
+ * @brief 
+ * Permissions required for CPU command's formal argument
+ */
+enum arg_perms
+{
+    ARG_RD      = 01,
+    ARG_WR      = 02,
+    ARG_RDWR    = ARG_RD | ARG_WR
+};
+
+/**
+ * @brief 
+ * Description of CPU command formal argument
+ */
+struct asm_arg
+{
+    int*        val_ptr;
+    arg_perms   perms;
+};
+
+/**
+ * @brief 
+ * Inforamtion about specific command's formal
+ * arguments
+ */
+struct cmd_args
+{
+    size_t arg_count;
+    asm_arg arg_list[ARG_MAX];
+};
+
+/**
+ * @brief Wrapper for struct initializers
+ * 
+ * @param args `cmd_args` initializet
+ * @return args
+ */
+inline cmd_args get_arg(cmd_args args) { return args; }
 
 /**
  * @brief 
@@ -38,28 +75,22 @@ enum asm_command
  */
 struct command_description
 {
-    asm_command command;
+    cpu_command command;
     const char* name;
     size_t      arg_count;
 };
 
+#define ASM_CMD(cmd_name, num, args, ...)\
+    { .command = (cpu_command) num, .name = #cmd_name, .arg_count = get_arg(args).arg_count },
 /**
  * @brief 
  * All commands array
  */
 const command_description COMMANDS[] =
 {
-    {.command = CMD_NOP,    .name = "nop",  .arg_count = 0},
-    {.command = CMD_ADD,    .name = "add",  .arg_count = 0},
-    {.command = CMD_INC,    .name = "inc",  .arg_count = 0},
-    {.command = CMD_SUB,    .name = "sub",  .arg_count = 0},
-    {.command = CMD_DEC,    .name = "dec",  .arg_count = 0},
-    {.command = CMD_MUL,    .name = "mul",  .arg_count = 0},
-    {.command = CMD_DIV,    .name = "div",  .arg_count = 0},
-    {.command = CMD_PUSH,   .name = "push", .arg_count = 1},
-    {.command = CMD_POP,    .name = "pop",  .arg_count = 0},
-    {.command = CMD_HALT,   .name = "halt", .arg_count = 0}
+    #include "asm_cmd.h"
 };
+#undef ASM_CMD
 
 /**
  * @brief 

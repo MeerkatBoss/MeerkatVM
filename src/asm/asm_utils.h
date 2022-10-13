@@ -55,12 +55,56 @@ const arg_tag TAGS[] =
  */
 const size_t TAG_COUNT = sizeof(TAGS)/sizeof(*TAGS);
 
+enum assembly_result
+{
+    ASM_SUCCESS     = 0,
+    ASM_SYNTAX      = -1,
+    ASM_LABEL_OVF   = -2,
+    ASM_DEFS_OVF    = -3,
+    ASM_FIXUP_OVF   = -4
+};
+
+const size_t MAX_LABEL_LEN = 32;
+struct asm_label
+{
+    char name[32];
+    ssize_t addr;
+};
+
+struct fixup
+{
+    size_t label_number;
+    size_t addr;
+};
+
+struct asm_def
+{
+    char name[MAX_LABEL_LEN];
+    int value;
+};
+
+const size_t MAX_LABELS = 64;
+const size_t MAX_FIXUPS = MAX_LABELS * 4;
+
+struct assembly_state
+{
+    padded_header   header;
+    size_t          ip;
+    int*            cmd;
+    asm_label       labels[MAX_LABELS];
+    asm_def         definitions[MAX_LABELS];
+    fixup           fixups[MAX_FIXUPS];
+    assembly_result result;
+};
+
+int assemble(TextLines* text_lines, assembly_state* state);
+
 /**
  * @brief Get the command by name
  * 
  * @param[in] str Command name
- * @param[out] n_read Number of charachters read from `str`
- * @return pointer to mathcing `command_description` upon success,
+ * @param[out] n_read Number of characters read from `str`
+ * @return pointer to matching `command_description` upon success,
  * `NULL` otheriwse
  */
 const command_description* get_description(const char* str, int* n_read);

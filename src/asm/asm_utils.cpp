@@ -79,15 +79,17 @@ void try_print_listing(const TextLines text_lines, const void* cmd_array)
     LOG_ASSERT_ERROR(listing != NULL, return,
         "Could not open listing file \'%s\'", listing_file);
     
-    const int *int_cmd = (const int*)cmd_array;
+    const unsigned int *int_cmd = (const unsigned int*)cmd_array;
+    size_t ip = 0;
 
     for (size_t i = 0; i < text_lines.line_count; i++)
     {
-        fprintf(listing, "%zu:\t%24s|\t%04x", i + 1, text_lines.lines[i].line, *int_cmd);
-        size_t arg_count = COMMANDS[*int_cmd].arg_count;
-        int_cmd++;
+        fprintf(listing, "[%#06zx] %#06x", ip, int_cmd[ip]);
+        size_t arg_count = COMMANDS[int_cmd[ip]].arg_count;
+        ip++;
         for (size_t j = 0; j < arg_count; j++)
-            fprintf(listing, " %04x", *(int_cmd++));
-        fputc('\n', listing);
+            fprintf(listing, " %#06x", int_cmd[ip++]);
+        fprintf(listing, "%*s %s\n", (ARG_MAX - arg_count + 1) * 7 + 4,
+                "|", text_lines.lines[i].line);
     }
 }
