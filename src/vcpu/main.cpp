@@ -1,5 +1,6 @@
 #include "logger.h"
 #include "vcpu_utils.h"
+
 enum status
 {
     STATUS_SUCCESS,
@@ -10,33 +11,29 @@ enum status
 int main(int argc, char** argv)
 {
     add_default_file_logger();
+    add_logger(
+        {
+            .name = "Console output",
+            .stream = stdout,
+            .logging_level = LOG_ERROR,
+            .settings_mask = LGS_USE_ESCAPE | LGS_KEEP_OPEN
+        });
 
     LOG_ASSERT_ERROR(argc == 2, return STATUS_INPUT_ERROR,
         "Incorrect program usage.", NULL);
     
-    size_t cmd_count = 0;
-    int* commands = read_cmd_array(argv[1], &cmd_count);
-    LOG_ASSERT_ERROR(commands != NULL, return STATUS_INPUT_ERROR,
-        "Corrupt program file.", NULL);
+    proc_state vcpu = proc_ctor(argv[1]);
+    LOG_ASSERT_ERROR(vcpu.cmd != NULL, return STATUS_INPUT_ERROR,
+        "Failed to read program.", NULL);
 
-    Stack stack = {};
-    int constructed = StackCtor(&stack);
-    LOG_ASSERT_ERROR(constructed == 0, return STATUS_RUNTIME_ERROR,
-        "Error initializing stack.", NULL);
-
-    size_t iptr = 0;
-    while(iptr < cmd_count)
-    {
-        size_t shift = 0;
-        int status = execute_command(commands + iptr, &stack, &shift);
-        LOG_ASSERT_ERROR(status != -1, return STATUS_INPUT_ERROR,
-            "Invalid command sequence.", NULL);
-        if (status == 1) break;
-        iptr += shift;
-    }
-
-    free(commands);
-    StackDtor(&stack);
+    int res = proc_run(&vcpu);
+    LOG_ASSERT_ERROR(res != -1,
+        {
+            proc_dtor(&vcpu);
+            return STATUS_INPUT_ERROR;
+        },
+        "Failed to execute program.", NULL);
     
+    proc_dtor(&vcpu);
     return STATUS_SUCCESS;
 }

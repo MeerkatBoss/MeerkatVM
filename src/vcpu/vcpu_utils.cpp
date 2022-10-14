@@ -1,116 +1,112 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/mman.h>
 
 #include "vcpu_utils.h"
+#include "text_lines.h"
 #include "logger.h"
 #include "assembler.h"
 
-int* read_cmd_array(const char* filename, size_t* array_len)
+proc_state proc_ctor(const char* program_file)
 {
-    const size_t SIGNATURE_LENGTH = 4;
-    FILE* program_file = fopen(filename, "r");   
-    LOG_ASSERT_FATAL(program_file != NULL, "Cannot open file \'%s\'", filename);
-
-    char signature_buf[SIGNATURE_LENGTH + 1] = "";
-    unsigned int version = 0;
-    size_t length = 0;
-
-    int read_status = fscanf(program_file, "%4s %u %zu",
-                            signature_buf, &version, &length);
-    LOG_ASSERT(read_status == 3,                        return NULL);
-    LOG_ASSERT(strcmp(signature_buf, STR_SIGN) == 0,    return NULL);
-    LOG_ASSERT(version == LATEST_VERSION,               return NULL);
-
-    int* array = (int*)calloc(length, sizeof(*array));
-
-    for (size_t i = 0; i < length; i++)
-    {
-        read_status = fscanf(program_file, "%d", array + i);
-        LOG_ASSERT(read_status == 1,
-        {
-            free(array);
-            return NULL;
-        });
-    }
-    *array_len = length;
-    return array;
-}
-
-static unsigned int get_operands(Stack* stack, size_t n_op, int* op1, int* op2);
-
-int execute_command(const int* cmd_array, Stack* stack, size_t* shift)
-{
-#define BINARY_OP_CASE(command, operation) case command:\
-        err = get_operands(stack, 2, &op1, &op2);\
-        LOG_ASSERT(!err, return -1);\
-        err = StackPush(stack, op2 operation op1);\
-        LOG_ASSERT(!err, return -1);\
-
-    size_t iptr = 0;
-    int command = cmd_array[iptr++];
-    int op1 = 0, op2 = 0;
-    unsigned int err = 0;
-    switch (command)
-    {
-    case CMD_NOP: break;
-
-    BINARY_OP_CASE(CMD_ADD, +) break;
-    BINARY_OP_CASE(CMD_SUB, -) break;
-    BINARY_OP_CASE(CMD_MUL, *) break;
-    BINARY_OP_CASE(CMD_DIV, /) break;
-
-    case CMD_INC:
-        err = get_operands(stack, 1, &op1, NULL);
-        LOG_ASSERT(!err, return -1);
-        err = StackPush(stack, op1 + 1);
-        LOG_ASSERT(!err, return -1);
-        break;
-    case CMD_DEC:
-        err = get_operands(stack, 1, &op1, NULL);
-        LOG_ASSERT(!err, return -1);
-        err = StackPush(stack, op1 - 1);
-        LOG_ASSERT(!err, return -1);
-        break;
-    case CMD_PUSH:
-        op1 = cmd_array[iptr++];
-        err = StackPush(stack, op1);
-        LOG_ASSERT(!err, return -1);
-        break;
-    case CMD_POP:
-        err = get_operands(stack, 1, &op1, NULL);
-        LOG_ASSERT(!err, return -1);
-        printf("%d\n", op1);
-        break;
-
-    case CMD_HALT:
-        return 1;
-        
-    default:
-        LOG_ASSERT(0 && "Invalid command encountered", return -1);
-        break;
-    }
-    *shift = iptr;
-
-    StackDump(stack);
-
-    return 0;
-}
-
-static unsigned int get_operands(Stack* stack, size_t n_op, int* op1, int* op2)
-{
-    LOG_ASSERT(n_op == 1 || n_op == 2, return 1);
+    char* bytes = NULL;
+    size_t file_size = map_file(program_file, &bytes, 0);
+    LOG_ASSERT_ERROR(file_size >= HEADER_SIZE, return {},
+        "Could not open file \'%s\'", program_file);
+    padded_header *hdr = (padded_header*) bytes;
+    LOG_ASSERT_ERROR(strncmp(hdr->header.signature, STR_SIGN, 4) == 0,
+        return {},
+        "Invalid signature \'%.4s\'", hdr->header.signature);
+    LOG_ASSERT_ERROR(hdr->header.version == LATEST_VERSION,
+        return {},
+        "Version %u not supported", hdr->header.version);
     
-    LOG_ASSERT(op1 != NULL, return 1);
-    unsigned int err = 0;
-    *op1 = StackPopCopy(stack, &err);
-    LOG_ASSERT(!err,        return 1);
+    Stack* value_stack = (Stack*) calloc(1, sizeof(*value_stack));
+    Stack* call_stack  = (Stack*) calloc(1, sizeof(*value_stack));
+    StackCtor(value_stack);
+    StackCtor(call_stack);
 
-    if (n_op == 2)
-    {
-        LOG_ASSERT(op2 != NULL, return 1);
-        *op2 = StackPopCopy(stack, &err);
-
-        LOG_ASSERT(!err,    return 1);
-    }
-    return 0;
+    return {
+        .program_length = hdr->header.opcnt,
+        .mapping_size   = file_size,
+        .registers      = {0, 0, 0, 0, 0},
+        .cmd            = (int*)(bytes + HEADER_SIZE),
+        .value_stack    = value_stack,
+        .call_stack     = call_stack
+    };
 }
+
+
+void proc_dtor(proc_state* cpu)
+{
+    int err = munmap((char*)cpu->cmd - HEADER_SIZE, cpu->mapping_size);
+    LOG_ASSERT_ERROR(err != -1, return,
+        "Invalid cpu instance", NULL);
+    StackDtor(cpu->value_stack);
+    StackDtor(cpu->call_stack);
+    free(cpu->value_stack);
+    free(cpu->call_stack);
+}
+
+static asm_arg next_parameter(const int* cmd_array, int* ip);
+
+#define CMD                 (cpu->cmd)
+#define STACK               (cpu->value_stack)
+#define CALL_STACK          (cpu->call_stack)
+#define IP                  (cpu->registers[REG_IP])
+#define PUSH(value)         StackPush(cpu->value_stack, (value))
+#define POP                 StackPopCopy(cpu->value_stack, NULL)
+#define NEXT_ARG            next_parameter(CMD, &IP)
+#define STOP                return 0
+#define ASSERT(cond, msg)   LOG_ASSERT_ERROR(cond, return -1, msg, NULL)
+
+int proc_run(proc_state *cpu)
+{
+
+    #define ASM_CMD(name, num, args, code, ...)\
+        case num: code; break;
+
+    while (IP < cpu->program_length)
+    {
+        switch (CMD[IP])
+        {
+        #include "asm_cmd.h"
+        
+        default:
+            LOG_ASSERT_ERROR(0, return -1,
+                "Failed to execute command at [%x]", IP);
+            break;
+        }
+
+        IP++;
+        StackDump(cpu->value_stack);
+    }
+
+    #undef ASM_CMD
+
+    return 0;
+
+}
+
+#undef CMD
+#undef STACK
+#undef CALL_STACK
+#undef IP
+#undef PUSH
+#undef POP
+#undef NEXT_ARG
+#undef STOP
+#undef ASSERT
+
+static asm_arg next_parameter(const int* cmd_array, int* ip)
+{
+    static int argument = 0;
+
+    argument = cmd_array[++*ip];
+
+    return {
+        .val_ptr = &argument,
+        .perms   = ARG_RD
+    };
+}
+
