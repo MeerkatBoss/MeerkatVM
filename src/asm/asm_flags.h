@@ -33,14 +33,14 @@ const arg_tag TAGS[] =
 {
     {
         .short_tag = 'o',
-        .long_tag = "output-to",
+        .long_tag = "output",
         .parameter_count = 1,
         .callback = set_output_file,
         .description = "Set output file. Default output file is a.out."
     },
     {
         .short_tag = 'l',
-        .long_tag = "add-listing",
+        .long_tag = "listing",
         .parameter_count = 1,
         .callback = add_listing,
         .description = "Output assembly listing to specified file."

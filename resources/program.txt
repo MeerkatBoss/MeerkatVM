@@ -1,9 +1,19 @@
-push 50
-push 30
+push    50
+push    30
 sub
-push 5
-push 3
+
+push    5
+push    3
 sub
+
 div
-pop
+
+push    16
+pop     rax
+
+pop     [rax+2]
+push    [rax+2]
+push    [2+rax]
+out
+out
 halt

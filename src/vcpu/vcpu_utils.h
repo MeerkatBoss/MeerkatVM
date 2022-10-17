@@ -3,15 +3,6 @@
 
 #include "int_stack.h"
 
-enum vcpu_reg
-{
-    REG_IP  = 0,
-    REG_RAX = 1,
-    REG_RBX = 2,
-    REG_RCX = 3,
-    REG_RDX = 4
-};
-
 const int REG_COUNT = 5;
 
 struct proc_state

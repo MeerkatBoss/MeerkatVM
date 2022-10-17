@@ -27,6 +27,13 @@ enum cpu_command
 
 #undef ASM_CMD
 
+#define ASM_REG(name, num, ...) REG_##name = num,
+enum asm_reg
+{
+    #include "asm_reg.h"
+};
+#undef ASM_REG
+
 const size_t ARG_MAX = 1;
 
 /**
@@ -41,6 +48,13 @@ enum arg_perms
     ARG_LABEL   = 04
 };
 
+enum arg_flags
+{
+    AF_NUM  = 0x20,
+    AF_REG  = 0x40,
+    AF_MEM  = 0x80
+};
+
 /**
  * @brief 
  * Description of CPU command formal argument
@@ -48,6 +62,7 @@ enum arg_perms
 struct asm_arg
 {
     int*        val_ptr;
+    arg_flags   flags;
     arg_perms   perms;
 };
 
@@ -117,7 +132,7 @@ const char STR_SIGN[5] = SIGNATURE;
  * @brief 
  * Latest command-set version
  */
-const unsigned int LATEST_VERSION = 0;
+const unsigned int LATEST_VERSION = 1;
 
 /**
  * @brief 

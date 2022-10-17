@@ -45,14 +45,22 @@ ASM_CMD(PUSH,0x07, {.arg_count = 1 _ .arg_list = {{.perms = ARG_RD}}},
     PUSH(*argument.val_ptr);
 })
 
-ASM_CMD(POP, 0x08, {.arg_count = 0 _ .arg_list = {}},
+ASM_CMD(POP, 0x08, {.arg_count = 1 _ .arg_list = {{.perms = ARG_WR}}},
+{
+    asm_arg argument = NEXT_ARG;
+    ASSERT(argument.perms & ARG_WR, "Cannot pop to given address.");
+    *argument.val_ptr = POP;
+})
+
+ASM_CMD(OUT, 0x09, {.arg_count = 0 _ .arg_list = {}},
 {
     printf("%d\n", POP);
 })
 
-ASM_CMD(HALT,0x09, {.arg_count = 0 _ .arg_list = {}},
+ASM_CMD(HALT,0x0A, {.arg_count = 0 _ .arg_list = {}},
 {
     STOP;
 })
+
 
 #undef _
