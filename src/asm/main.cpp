@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
     LOG_ASSERT_ERROR(argc >= 2, return STATUS_INPUT_ERROR,
         "Incorrect program usage", NULL);
-    int parsed = parse_args(argc - 2, argv + 1, TAG_COUNT, TAGS);
+    int parsed = parse_args((size_t)argc - 2, argv + 1, TAG_COUNT, TAGS);
     LOG_ASSERT_ERROR(parsed != -1, return STATUS_INPUT_ERROR,
         "Invalid command-line options", NULL);
 

@@ -66,7 +66,7 @@ int proc_run(proc_state *cpu)
     #define ASM_CMD(name, num, args, code, ...)\
         case num: code; break;
 
-    while (IP < cpu->program_length)
+    while ((size_t)IP < cpu->program_length)
     {
         switch (CMD[IP])
         {

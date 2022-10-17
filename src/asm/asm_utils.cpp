@@ -31,10 +31,10 @@ void print_listing(const char* filename, const TextLines* text_lines, const void
         if (strempty(text_lines->lines[i].line)) continue;
         int printed = 0;
         int total_chars = 0;
-        int cur_cmd = byte_cmd[ip++];
+        unsigned int cur_cmd = byte_cmd[ip++];
 
         fprintf(listing, "[0x%04zx] " BYTE_FORMAT "%n", ip, cur_cmd, &printed);
-        int cmd_mask = AF_NUM - 1;
+        unsigned cmd_mask = AF_NUM - 1;
         size_t arg_count = COMMANDS[cur_cmd & cmd_mask].arg_count;
         total_chars += printed;
 
@@ -108,7 +108,7 @@ int assemble(TextLines* text_lines, assembly_state* state)
                 LOG_ASSERT_ERROR(args_size != -1, return -1,                        \
                     "Invalid arguments given to \'%s\' on line %zu: \'%s\'",        \
                     buffer, i + 1, cur_line);                                       \
-                IP += args_size;                                                    \
+                IP += (size_t)args_size;                                            \
             } else
 
         #include "asm_cmd.h"
@@ -132,7 +132,6 @@ static int assemble_args(cmd_args args, const char* strargs, void* buffer)
 {
     int *int_buf = (int*) buffer;   /* Buffer is int for now */
     int *buf_start = int_buf;
-    int cur_cmd = *buf_start;
     int_buf++;
     
     for (size_t i = 0; i < args.arg_count; i++)
@@ -142,8 +141,10 @@ static int assemble_args(cmd_args args, const char* strargs, void* buffer)
         int arg_flags = asm_parse_arg(strargs, &n_read, int_buf, &arg_size);
 
         LOG_ASSERT(arg_flags != -1, return -1);
+        unsigned flags = (unsigned) arg_flags;    /* arg_flags is non-negative */
+
         /* writable argument - memory or register without constant */
-        int perms = (arg_flags & AF_MEM) || ((arg_flags & AF_REG) && !(arg_flags & AF_NUM))
+        unsigned perms = (flags & AF_MEM) || ((flags & AF_REG) && !(flags & AF_NUM))
                             ? ARG_RDWR
                             : ARG_RD;
 
@@ -156,7 +157,7 @@ static int assemble_args(cmd_args args, const char* strargs, void* buffer)
         strargs    += n_read;
     }
 
-    return int_buf - buf_start;
+    return (int)(int_buf - buf_start);  /* arguments don't take much space */
 }
 
 /**
@@ -179,8 +180,8 @@ static int asm_parse_arg(const char* strargs, int* n_read, void* buffer, int *ar
 
     LOG_ASSERT_ERROR(read_status == 1, return -1, "Expected argument", NULL);
 
-    unsigned int flags = 0;
-    int char_cnt = strlen(BUFFER);
+    int flags = 0;
+    size_t char_cnt = strlen(BUFFER);
     char *bufptr = BUFFER;
     
     if (*bufptr == '[')   /* Memory access */
@@ -188,7 +189,7 @@ static int asm_parse_arg(const char* strargs, int* n_read, void* buffer, int *ar
         LOG_ASSERT_ERROR(bufptr[char_cnt - 1] == ']', return -1,
             "Invalid memory access argument: '%s'", bufptr);
         
-        flags |= AF_MEM;
+        flags |= (signed) AF_MEM;
         bufptr[char_cnt - 1] = '\0';
         bufptr++;
     }
@@ -221,7 +222,7 @@ static int asm_parse_arg(const char* strargs, int* n_read, void* buffer, int *ar
             "Sum of registers is not a valid argument.", NULL);
         cmd[0] += cmd[1];
         cmd[1] = 0;
-        flags |= AF_NUM;
+        flags |= arg1;
 
         *arg_size = 1;
 

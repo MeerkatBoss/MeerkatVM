@@ -20,7 +20,7 @@
  * @brief 
  * Byte-codes of virtual CPU instructions
  */
-enum cpu_command
+enum cpu_command : unsigned
 {
     #include "asm_cmd.h"
 };
@@ -28,7 +28,7 @@ enum cpu_command
 #undef ASM_CMD
 
 #define ASM_REG(name, num, ...) REG_##name = num,
-enum asm_reg
+enum asm_reg : unsigned
 {
     #include "asm_reg.h"
 };
@@ -40,7 +40,7 @@ const size_t ARG_MAX = 1;
  * @brief 
  * Permissions required for CPU command's formal argument
  */
-enum arg_perms
+enum arg_perms : unsigned
 {
     ARG_RD      = 01,
     ARG_WR      = 02,
@@ -48,7 +48,7 @@ enum arg_perms
     ARG_LABEL   = 04
 };
 
-enum arg_flags
+enum arg_flags : unsigned
 {
     AF_NUM  = 0x20,
     AF_REG  = 0x40,
