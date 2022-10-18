@@ -14,7 +14,16 @@
 
 #include "argparser.h"
 
+/**
+ * @brief 
+ * Output file name
+ */
 #define output_file (*output_file_addr_())
+
+/**
+ * @brief 
+ * Listing file name
+ */
 #define listing_file (*listing_file_addr_())
 
 const char** output_file_addr_();
