@@ -56,92 +56,218 @@ void print_listing(const char* filename, const TextLines* text_lines, const void
     #undef BYTE_FORMAT
 }
 
-/**
- * @brief Parse command argument
- * 
- * @param[in] strargs  String representation of an argument
- * @param[out] n_read  Number of characters read from 'strargs'
- * @param[out] buffer  Command array
- * @param[out] arg_size Number of used array cells upon success 
- * @return `cmd_flags` upon success, -1 otherwise
- */
-static int asm_parse_arg(const char* strargs, int *n_read, void *buffer, int *arg_size);
-
+#define HEADER  (state->header)
+#define CMD     (state->cmd)
+#define CMD_LEN (state->cmd_size)
+#define IP      (state->ip)
+#define LABELS  (state->labels)
+#define DEFS    (state->definitions)
+#define FIXUP   (state->fixups)
+#define STATE   (state->result)
 
 /**
- * @brief Assemble all command arguments
- * 
- * @param[in] args    Formal arguments description
- * @param[in] strargs String containing arguments
- * @param[out] buffer Output buffer
- * @return number of occupied array cells upon success, -1 otherwise
+ * @brief 
+ * Parse `line` grammar rule
+ * @param[in] line Program line
+ * @param[inout] state Current assembly state
+ * @return 0 upon success, -1 otherwise
  */
-static int assemble_args(cmd_args args, const char* strargs, void* buffer);
+static int asm_parse_line(const char* line, assembly_state* state);
+
+/**
+ * @brief 
+ * Parse `def` grammar rule
+ * @param[in] str Program string
+ * @param[inout] state Current assembly state
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_def(const char* str, assembly_state* state);
+
+/**
+ * @brief 
+ * Parse `code` grammar rule
+ * @param[in] str Program string
+ * @param[inout] state Current assembly state
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_code(const char* str, assembly_state* state);
+
+/**
+ * @brief 
+ * Parse `label` grammar rule
+ * @param[in] str Program string
+ * @param[inout] state Current assembly state
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_label(const char* str, assembly_state* state);
+
+/**
+ * @brief 
+ * Parse `command` grammar rule
+ * @param[in] str Program string
+ * @param[inout] state Current assembly state
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_command(const char* str, assembly_state* state);
+
+/**
+ * @brief 
+ * Parse `arg_list` grammar rule
+ * @param[in] str Program string
+ * @param[in] args Argument list description
+ * @param[inout] state Current assembly state
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_arg_list(const char* str, cmd_args args, assembly_state* state);
+
+/**
+ * @brief 
+ * Parse `arg` grammar rule
+ * @param[inout] str Program string.
+ * Delimiting charachters, such as '[', ']' and '+' will be replaced
+ * with null-terminator
+ * @param[inout] state Current assembly state
+ * @param[out] flags `arg_flags` of an argument
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_arg(char* str, assembly_state* state, unsigned* flags);
+
+/**
+ * @brief
+ * Parse `sum_arg` grammar rule
+ * @param[inout] str Program string.
+ * Delimiting charachters, such as '+' will be replaced
+ * with null-terminator
+ * @param[inout] state Current assembly state
+ * @param[out] flags `arg_flags` of an argument
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_sum_arg(char* str, assembly_state* state, unsigned* flags);
+
+/**
+ * @brief 
+ * Parse `lit_arg` grammar rule
+ * 
+ * @param[in]  str   Literal string
+ * @param[out] value Parsed literal
+ * @param[out] flags `arg_flags` of an argument
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_lit_arg(const char* str, int* value, unsigned* flags);
+
+/**
+ * @brief 
+ * Parse `register` grammar rule
+ * 
+ * @param[in]  str   Literal string
+ * @param[out] value Parsed literal
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_register(const char* str, int *value);
+
+/**
+ * @brief 
+ * Parse `register` grammar rule
+ * 
+ * @param[in]  str   Literal string
+ * @param[out] value Parsed literal
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_number  (const char* str, int *value);
 
 int assemble(TextLines* text_lines, assembly_state* state)
 {
-    static const int BUFFER_SIZE = 256;
-    static char buffer[BUFFER_SIZE] = "";
+    CMD_LEN = text_lines->line_count * (2*MAX_CMD_ARGS + 1);
 
-    #define HEADER  (state->header)
-    #define CMD     (state->cmd)
-    #define IP      (state->ip)
-
-    size_t cmd_len = text_lines->line_count * (2*MAX_CMD_ARGS + 1);
-
-    CMD = (int*)calloc(cmd_len, sizeof(*CMD));
+    CMD = (int*)calloc(CMD_LEN, sizeof(*CMD));
     IP = 0;
 
     for (size_t i = 0; i < text_lines->line_count; i++)
     {
-        int n_read = 0;
-        const char* cur_line = text_lines->lines[i].line;
-        if (strempty(cur_line)) continue;
-        sscanf(cur_line, " %s%n", buffer, &n_read);
-
-        #define ASM_CMD(name, num, args, ...)                                       \
-            if (strcasecmp(buffer, #name) == 0)                                     \
-            {                                                                       \
-                LOG_ASSERT(IP < cmd_len, return -9999);                             \
-                CMD[IP] = num;                                                      \
-                int args_size = assemble_args(args, cur_line + n_read, CMD + IP);   \
-                LOG_ASSERT_ERROR(args_size != -1, return -1,                        \
-                    "Invalid arguments given to \'%s\' on line %zu: \'%s\'",        \
-                    buffer, i + 1, cur_line);                                       \
-                IP += (size_t)args_size;                                            \
-            } else
-
-        #include "asm_cmd.h"
-        /* else */  LOG_ASSERT_ERROR(0, return -1, 
-                            "Syntax error on line %zu: unknown command %s",
-                            i, buffer);
-
-        #undef ASM_CMD
+        int res = asm_parse_line(text_lines->lines[i].line, state);
+        LOG_ASSERT_ERROR(res != -1, return -1,
+            "Syntax error on line %zu", i + 1);
     }
     HEADER = {.header = {.signature = SIGNATURE,
                          .version   = LATEST_VERSION,
                          .opcnt     = IP}};
     return 0;
-
-    #undef HEADER
-    #undef CMD
-    #undef IP
 }
 
-static int assemble_args(cmd_args args, const char* strargs, void* buffer)
+static int asm_parse_line(const char* line, assembly_state* state)
 {
-    int *int_buf = (int*) buffer;   /* Buffer is int for now */
-    int *buf_start = int_buf;
-    int_buf++;
+    char first_char = '\0';
+    sscanf(line, " %c", &first_char);
+    if (first_char == '%')
+        return asm_parse_def(line, state);
+    return asm_parse_code(line, state);
+}
+
+/* TODO: definition support */
+static int asm_parse_def(const char* str, assembly_state* state)
+{
+    return -1;
+}
+
+static int asm_parse_code(const char* str, assembly_state* state)
+{
+    return asm_parse_command(str, state);
+}
+
+/* TODO: label support*/
+static int asm_parse_label(const char* str, assembly_state* state)
+{
+    return -1;
+}
+
+static int asm_parse_command(const char* str, assembly_state* state)
+{
+    static const int BUFFER_SIZE = 256;
+    static char buffer[BUFFER_SIZE] = "";
+
+    int n_read = 0;
+    if (strempty(str)) return 0;
+    sscanf(str, " %s%n", buffer, &n_read);
+
+    #define ASM_CMD(name, num, args, ...)                               \
+        if (strcasecmp(buffer, #name) == 0)                             \
+        {                                                               \
+            LOG_ASSERT(IP < CMD_LEN, return -1);                        \
+            CMD[IP] = num;                                              \
+            int parsed = asm_parse_arg_list(str + n_read, args, state); \
+            LOG_ASSERT_ERROR(parsed != -1, return -1,                   \
+                "Invalid arguments given to '%s': '%s'",                \
+                buffer, str);                                           \
+        } else
+
+    #include "asm_cmd.h"
+    /* else */  LOG_ASSERT_ERROR(0, return -1, 
+                        "Unknown command '%s'", buffer);
+
+    #undef ASM_CMD
+    return 0;
+}
+
+static int asm_parse_arg_list(const char* str, cmd_args args, assembly_state* state)
+{
+    const size_t BUFLEN = 32;
+    char BUFFER[BUFLEN] = "";
+
+    int *command = &CMD[IP++];
     
     for (size_t i = 0; i < args.arg_count; i++)
     {
         int n_read = 0;
-        int arg_size = 0;
-        int arg_flags = asm_parse_arg(strargs, &n_read, int_buf, &arg_size);
+        
+        int read = sscanf(str, "%s%n", BUFFER, &n_read);
+        LOG_ASSERT_ERROR(read == 1, return -1,
+            "%zu arguments expected, but %zu found", args.arg_count, i);
+        str += n_read;
 
-        LOG_ASSERT(arg_flags != -1, return -1);
-        unsigned flags = (unsigned) arg_flags;    /* arg_flags is non-negative */
+        unsigned flags = 0;
+        int parsed = asm_parse_arg(BUFFER, state, &flags);
+
+        LOG_ASSERT(parsed != -1, return -1);
 
         /* writable argument - memory or register without constant */
         unsigned perms = (flags & AF_MEM) || ((flags & AF_REG) && !(flags & AF_NUM))
@@ -150,110 +276,93 @@ static int assemble_args(cmd_args args, const char* strargs, void* buffer)
 
         LOG_ASSERT_ERROR((perms & args.arg_list[i].perms) == args.arg_list[i].perms,
             return -1,
-            "Argument '%*s': invalid read/write permissions.", n_read, strargs);
+            "Argument '%s': invalid read/write permissions.", BUFFER);
         
-        *buf_start |= arg_flags;
-        int_buf    += arg_size;
-        strargs    += n_read;
+        *command |= (signed) flags;
     }
 
-    return (int)(int_buf - buf_start);  /* arguments don't take much space */
+    return 0;
 }
 
-/**
- * @brief 
- * Parse assembly language literal
- * 
- * @param[in]  str   Literal string
- * @param[out] value Parsed literal
- * @return `arg_flags` flag upon success, -1 otherwise
- */
-static int parse_literal(const char* str, int* value);
-
-static int asm_parse_arg(const char* strargs, int* n_read, void* buffer, int *arg_size)
+static int asm_parse_arg(char* str, assembly_state* state, unsigned* flags)
 {
-    static const size_t BUFLEN = 256;
-    static char BUFFER[BUFLEN] = "";
-
-    int* cmd = (int*) buffer;
-    int read_status = sscanf(strargs, "%s %n", BUFFER, n_read);
-
-    LOG_ASSERT_ERROR(read_status == 1, return -1, "Expected argument", NULL);
-
-    int flags = 0;
-    size_t char_cnt = strlen(BUFFER);
-    char *bufptr = BUFFER;
+    size_t char_cnt = strlen(str);
     
-    if (*bufptr == '[')   /* Memory access */
+    if (*str == '[')   /* Memory access */
     {
-        LOG_ASSERT_ERROR(bufptr[char_cnt - 1] == ']', return -1,
-            "Invalid memory access argument: '%s'", bufptr);
+        LOG_ASSERT_ERROR(str[char_cnt - 1] == ']', return -1,
+            "Invalid memory access argument: '%s'", str);
         
-        flags |= (signed) AF_MEM;
-        bufptr[char_cnt - 1] = '\0';
-        bufptr++;
+        *flags |= AF_MEM;
+        str[char_cnt - 1] = '\0';
+        str++;
     }
 
-    char* plusptr = strchr(bufptr, '+');
+    return asm_parse_sum_arg(str, state, flags);
+}
+
+static int asm_parse_sum_arg(char* str, assembly_state* state, unsigned* flags)
+{
+    char* plusptr = strchr(str, '+');
     if (plusptr == NULL) /* no sum */
-    {
-        int arg_flag = parse_literal(bufptr, cmd + 0);
-        LOG_ASSERT_ERROR(arg_flag != -1, return -1,
-            "Could not parse literal: '%s'", bufptr);
-        flags |= arg_flag;
-        *arg_size = 1;
-
-        return flags;
-    }
+        return asm_parse_lit_arg(str, &CMD[IP++], flags);
 
     /* two arguments */
     *plusptr = '\0';
-    int arg1 = parse_literal(bufptr,      cmd + 0);
-    int arg2 = parse_literal(plusptr + 1, cmd + 1);
+    const char* argstr1 = str;
+    const char* argstr2 = plusptr + 1;
+    unsigned flags1 = 0;
+    int arg1 = asm_parse_lit_arg(argstr1, &CMD[IP++], &flags1);
+    int arg2 = asm_parse_lit_arg(argstr2, &CMD[IP++], flags);
+    *flags |= flags1;
     
     LOG_ASSERT_ERROR(arg1 != -1, return -1,
-        "Could not parse literal: '%s'", bufptr);
+        "Could not parse literal: '%s'", str);
     LOG_ASSERT_ERROR(arg2 != -1, return -1,
         "Could not parse literal: '%s'", plusptr + 1);
 
-    if (arg1 == arg2) /* same argument type */
-    {
-        LOG_ASSERT_ERROR(arg1 != AF_REG, return -1,
-            "Sum of registers is not a valid argument.", NULL);
-        cmd[0] += cmd[1];
-        cmd[1] = 0;
-        flags |= arg1;
+    unsigned sum_flags = (*flags) & (AF_NUM | AF_REG);
 
-        *arg_size = 1;
+    LOG_ASSERT_ERROR(sum_flags != AF_REG, return -1,
+        "Sum of registers is not a valid argument.", NULL);
 
-        return flags;
-    }
-    if (arg1 == AF_NUM) /* swap so that register comes before number*/
+    if (sum_flags == AF_NUM) /* same argument type */
     {
-        cmd[0] ^= cmd[1];
-        cmd[1] ^= cmd[0];
-        cmd[0] ^= cmd[1];
+        IP--;
+        CMD[IP - 1] += CMD[IP];
+        CMD[IP] = 0;
+
+        return 0;
     }
 
-    *arg_size = 2;
+    if (flags1 == AF_NUM) /* swap so that register comes before number*/
+    {
+        CMD[IP - 2] ^= CMD[IP - 1];
+        CMD[IP - 1] ^= CMD[IP - 2];
+        CMD[IP - 2] ^= CMD[IP - 1];
+    }
 
-    flags |= arg1 | arg2;
-    return flags;
+    return 0;
 }
 
-static int try_parse_register(const char* str, int *value);
-static int try_parse_number  (const char* str, int *value);
-
-static int parse_literal(const char* str, int* value)
+static int asm_parse_lit_arg(const char* str, int* value, unsigned* flags)
 {
-    if(try_parse_register(str, value) != -1) return AF_REG;
+    if(asm_parse_register(str, value) != -1)
+    {
+        *flags |= AF_REG;
+        return 0;
+    }
 
-    if(try_parse_number  (str, value) != -1) return AF_NUM;
+    if(asm_parse_number  (str, value) != -1)
+    {
+        *flags |= AF_NUM;
+        return 0;
+    }
 
     return -1;
 }
 
-static int try_parse_register(const char* str, int *value)
+static int asm_parse_register(const char* str, int *value)
 {
     #define ASM_REG(name, num)\
         if(strcasecmp(str, #name) == 0)\
@@ -268,9 +377,17 @@ static int try_parse_register(const char* str, int *value)
     #undef ASM_REG
 }
 
-static int try_parse_number  (const char* str, int *value)
+static int asm_parse_number(const char* str, int *value)
 {
-    return sscanf(str, "%d", value) - 1;
+    int n_read = 0;
+    int res = sscanf(str, "%d%n", value, &n_read);
+    if (res == 1)
+    {
+        LOG_ASSERT_ERROR(strempty(str + n_read), return -1,
+            "Invalid number literal '%s'", str);
+        return 0;
+    }
+    return -1;
 }
 
 static int strempty(const char* str)

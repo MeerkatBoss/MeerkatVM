@@ -16,7 +16,7 @@ enum assembly_result
 const size_t MAX_LABEL_LEN = 32;
 struct asm_label
 {
-    char name[32];
+    char name[MAX_LABEL_LEN];
     ssize_t addr;
 };
 
@@ -40,12 +40,20 @@ struct assembly_state
     padded_header   header;
     size_t          ip;
     int*            cmd;
+    size_t          cmd_size;
     asm_label       labels[MAX_LABELS];
     asm_def         definitions[MAX_LABELS];
     fixup           fixups[MAX_FIXUPS];
     assembly_result result;
 };
 
+/**
+ * @brief 
+ * Assemble program from lines
+ * @param[in] text_lines Program lines
+ * @param[out] state     Assembly state
+ * @return 0 upon success, -1 otherwise
+ */
 int assemble(TextLines* text_lines, assembly_state* state);
 
 /**
