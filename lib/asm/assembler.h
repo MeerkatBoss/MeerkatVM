@@ -1,6 +1,3 @@
-#ifndef ASSEMBLER_H
-#define ASSEMBLER_H
-
 /**
  * @file assembler.h
  * @author MeerkatBoss
@@ -11,6 +8,9 @@
  * @copyright Copyright (c) 2022
  * 
  */
+
+#ifndef ASSEMBLER_H
+#define ASSEMBLER_H
 
 #include <stddef.h>
 

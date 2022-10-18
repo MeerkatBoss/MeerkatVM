@@ -1,3 +1,14 @@
+/**
+ * @file vcpu_utils.h
+ * @author MeerkatBoss (solodovnikov.ia@phystech.edu)
+ * @brief Utility functions used in virtual processor.
+ * @version 0.1
+ * @date 2022-10-18
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef VCPU_UTILS_H
 #define VCPU_UTILS_H
 

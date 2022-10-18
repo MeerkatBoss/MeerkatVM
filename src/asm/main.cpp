@@ -1,3 +1,14 @@
+/**
+ * @file main.cpp
+ * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @brief Code assembler for virtual processor. Human readable text goes in, machine-readable binary goes out.
+ * @version 0.1
+ * @date 2022-10-18
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include <fcntl.h>
 #include <unistd.h>
 
