@@ -1,6 +1,6 @@
 /**
  * @file asm_utils.h
- * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @author MeerkatBoss (solodovnikov.ia@phystech.edu)
  * @brief Utility functions used in assembler program.
  * @version 0.1
  * @date 2022-10-18

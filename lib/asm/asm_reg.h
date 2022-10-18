@@ -1,6 +1,6 @@
 /**
  * @file asm_reg.h
- * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @author MeerkatBoss (solodovnikov.ia@phystech.edu)
  * @brief Register definitions.
  * @version 0.1
  * @date 2022-10-18

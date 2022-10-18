@@ -2,7 +2,7 @@
 #include <string.h>
 #include <sys/mman.h>
 
-#include "vcpu_utils.h"
+#include "vm_utils.h"
 #include "text_lines.h"
 #include "logger.h"
 #include "assembler.h"

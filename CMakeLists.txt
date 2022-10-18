@@ -54,9 +54,9 @@ add_subdirectory(src/asm)
 
 add_subdirectory(src/disasm)
 
-add_subdirectory(src/vcpu)
+add_subdirectory(src/virtual_machine)
 
-install(TARGETS asm disasm vcpu
+install(TARGETS asm disasm mbvm 
         RUNTIME
         CONFIGURATIONS Release)
 
