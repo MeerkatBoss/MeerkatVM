@@ -1,0 +1,3 @@
+# TODOs for all files in this folder
+## Rename every VCPU-thing into virtual_processor-thing
+VCPU probably stands for Virtual Central Processor Unit, which is a bit confusing because this processor is neither central, nor unit. It is just a virtual processor, so this or shortened name with the same context will be much more sensible. If it is still better to stay with abbreviation for some reason, than I would suggest going with SBVP name which stands for "Stack-Based Virtual Processor".

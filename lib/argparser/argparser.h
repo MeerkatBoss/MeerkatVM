@@ -1,3 +1,14 @@
+/**
+ * @file argparser.h
+ * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @brief Library with common command-line parsing functions.
+ * @version 0.1
+ * @date 2022-10-18
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef ARGPARSER_H
 #define ARGPARSER_H
 

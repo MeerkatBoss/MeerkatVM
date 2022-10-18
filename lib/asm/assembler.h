@@ -1,3 +1,14 @@
+/**
+ * @file assembler.h
+ * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @brief Structures and definitions used in assembler.
+ * @version 0.1
+ * @date 2022-10-18
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 

@@ -1,3 +1,14 @@
+/**
+ * @file asm_cmd.h
+ * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @brief Processor command definitions.
+ * @version 0.1
+ * @date 2022-10-18
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef ASM_CMD
 #error "macro ASM_CMD was not defined"
 #endif

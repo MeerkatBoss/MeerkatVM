@@ -1,3 +1,14 @@
+/**
+ * @file asm_utils.h
+ * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @brief Utility functions used in assembler program.
+ * @version 0.1
+ * @date 2022-10-18
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef ASM_UTILS_H
 #define ASM_UTILS_h
 

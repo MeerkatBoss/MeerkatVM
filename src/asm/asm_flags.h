@@ -1,3 +1,14 @@
+/**
+ * @file asm_flags.h
+ * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
+ * @brief List of assembler command line arguments and flags.
+ * @version 0.1
+ * @date 2022-10-18
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef ASM_FLAGS_H
 #define ASM_FLAGS_H
 
