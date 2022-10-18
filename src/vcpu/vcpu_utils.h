@@ -4,6 +4,7 @@
 #include "int_stack.h"
 
 const int REG_COUNT = 5;
+const int MEM_SIZE  = 1024;
 
 struct proc_state
 {
@@ -13,6 +14,7 @@ struct proc_state
     int*    cmd;
     Stack*  value_stack;
     Stack*  call_stack;
+    int     memory[MEM_SIZE];
 };
 
 proc_state proc_ctor(const char* program_file);

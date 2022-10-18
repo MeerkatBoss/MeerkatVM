@@ -48,33 +48,36 @@ void proc_dtor(proc_state* cpu)
     free(cpu->call_stack);
 }
 
-static asm_arg next_parameter(const int* cmd_array, int* ip);
+static asm_arg next_parameter(proc_state* cpu);
 
 #define CMD                 (cpu->cmd)
+#define REGS                (cpu->registers)
 #define STACK               (cpu->value_stack)
 #define CALL_STACK          (cpu->call_stack)
+#define RAM                 (cpu->memory)
 #define IP                  (cpu->registers[REG_IP])
 #define PUSH(value)         StackPush(cpu->value_stack, (value))
 #define POP                 StackPopCopy(cpu->value_stack, NULL)
-#define NEXT_ARG            next_parameter(CMD, &IP)
+#define NEXT_ARG            next_parameter(cpu)
 #define STOP                return 0
 #define ASSERT(cond, msg)   LOG_ASSERT_ERROR(cond, return -1, msg, NULL)
 
 int proc_run(proc_state *cpu)
 {
+    const unsigned cmd_mask = 0x1f;
 
     #define ASM_CMD(name, num, args, code, ...)\
         case num: code; break;
 
     while ((size_t)IP < cpu->program_length)
     {
-        switch (CMD[IP])
+        switch ((unsigned)CMD[IP] & cmd_mask)
         {
         #include "asm_cmd.h"
         
         default:
             LOG_ASSERT_ERROR(0, return -1,
-                "Failed to execute command at [%x]", IP);
+                "Failed to execute command '%x' at [%x]", CMD[IP], IP);
             break;
         }
 
@@ -88,25 +91,58 @@ int proc_run(proc_state *cpu)
 
 }
 
+static asm_arg next_parameter(proc_state* cpu)
+{
+    static int argument = 0;
+    const unsigned flag_mask = 0xe0;
+
+    unsigned flags = (unsigned)CMD[IP] & flag_mask;
+
+    int *val_ptr = &argument;
+
+    if (flags & AF_REG)
+    {
+        int reg_num = CMD[++IP];
+        LOG_ASSERT_ERROR(reg_num < REG_COUNT, return {},
+            "Invalid register number at 0x%*x", sizeof(IP)*2, IP);
+        val_ptr = &REGS[reg_num];
+    }
+    if (flags & AF_NUM)
+    {
+        argument = CMD[++IP];
+
+        if (val_ptr != &argument)
+        {
+            argument += *val_ptr;
+            val_ptr = &argument;
+        }
+    }
+    if (flags & AF_MEM)
+    {
+        LOG_ASSERT_ERROR(*val_ptr < MEM_SIZE, return {},
+            "Invalid memory address '0x%*x' at 0x%*x",
+            sizeof(*val_ptr)*2, *val_ptr,
+            sizeof(IP), IP);
+        return {
+            .val_ptr = &RAM[*val_ptr],
+            .perms   = ARG_RDWR
+        };
+    }
+
+    return {
+        .val_ptr = val_ptr,
+        .perms   = val_ptr == &argument ? ARG_RD : ARG_RDWR
+    };
+}
+
 #undef CMD
+#undef REGS
 #undef STACK
 #undef CALL_STACK
+#undef RAM
 #undef IP
 #undef PUSH
 #undef POP
 #undef NEXT_ARG
 #undef STOP
 #undef ASSERT
-
-static asm_arg next_parameter(const int* cmd_array, int* ip)
-{
-    static int argument = 0;
-
-    argument = cmd_array[++*ip];
-
-    return {
-        .val_ptr = &argument,
-        .perms   = ARG_RD
-    };
-}
-
