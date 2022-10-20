@@ -25,5 +25,9 @@ loop_start:     push rcx
                 push [rax+2]
                 out                             ; print number
 
+                pop rcx                         ; decrement counter
+                dec
+                push rcx
+
                 jmp loop_start                  ; repeat loop
 loop_end:       halt

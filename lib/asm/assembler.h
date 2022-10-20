@@ -50,6 +50,7 @@ enum arg_perms : unsigned
 
 enum arg_flags : unsigned
 {
+    AF_LAB  = 0x00,
     AF_NUM  = 0x20,
     AF_REG  = 0x40,
     AF_MEM  = 0x80
@@ -95,7 +96,7 @@ const char STR_SIGN[5] = SIGNATURE;
  * @brief 
  * Latest command-set version
  */
-const unsigned int LATEST_VERSION = 1;
+const unsigned int LATEST_VERSION = 2;
 
 /**
  * @brief 

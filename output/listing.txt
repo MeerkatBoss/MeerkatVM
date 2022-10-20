@@ -20,10 +20,14 @@
 [0x0016]                       | 
 [0x0016] 47 03                 | loop_start:     push rcx
 [0x0018] 27 00                 |                 push 0
-[0x001a] 11 22                 |                 jle loop_end                    ; check exit condition
+[0x001a] 11 27                 |                 jle loop_end                    ; check exit condition
 [0x001c]                       | 
 [0x001c] e7 01 02              |                 push [rax+2]
 [0x001f] 09                    |                 out                             ; print number
 [0x0020]                       | 
-[0x0020] 0b 16                 |                 jmp loop_start                  ; repeat loop
-[0x0022] 0a                    | loop_end:       halt
+[0x0020] 48 03                 |                 pop rcx                         ; decrement counter
+[0x0022] 04                    |                 dec
+[0x0023] 47 03                 |                 push rcx
+[0x0025]                       | 
+[0x0025] 0b 16                 |                 jmp loop_start                  ; repeat loop
+[0x0027] 0a                    | loop_end:       halt

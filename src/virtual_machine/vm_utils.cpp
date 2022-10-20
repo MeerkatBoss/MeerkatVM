@@ -53,6 +53,7 @@ static asm_arg next_parameter(proc_state* cpu);
 #define CMD                 (cpu->cmd)
 #define REGS                (cpu->registers)
 #define STACK               (cpu->value_stack)
+#define ST_SIZE             (cpu->value_stack->size)
 #define CALL_STACK          (cpu->call_stack)
 #define RAM                 (cpu->memory)
 #define IP                  (cpu->registers[REG_IP])
@@ -97,6 +98,15 @@ static asm_arg next_parameter(proc_state* cpu)
     const unsigned flag_mask = 0xe0;
 
     unsigned flags = (unsigned)CMD[IP] & flag_mask;
+
+    if (flags == AF_LAB)
+    {
+        argument = CMD[++IP];
+        return {
+            .val_ptr = &argument,
+            .perms   = ARG_LABEL
+        };
+    }
 
     int *val_ptr = &argument;
 
