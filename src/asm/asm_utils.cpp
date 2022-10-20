@@ -30,8 +30,11 @@ assembly_state* assembly_state_ctor(const char* filename)
         .cmd         = (int*) calloc(cmd_len, sizeof(int)),
         .cmd_size    = cmd_len,
         .labels      = (asm_label*) calloc(MAX_LABELS, sizeof(asm_label)),
+        .label_cnt   = 0,
         .definitions = (asm_def*) calloc(MAX_LABELS, sizeof(asm_def)),
+        .def_cnt     = 0,
         .fixups      = (fixup*) calloc(MAX_FIXUPS, sizeof(fixup)),
+        .fix_cnt     = 0,
         .result      = ASM_SUCCESS
     };
      

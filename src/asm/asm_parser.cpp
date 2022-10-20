@@ -6,13 +6,18 @@
 #include "asm_parser.h"
 #include "logger.h"
 
+static const long ADDR_UNSET = -1;
+
 #define HEADER      (state->header)
 #define CMD         (state->cmd)
 #define CMD_LEN     (state->cmd_size)
 #define IP          (state->ip)
 #define LABELS      (state->labels)
+#define LB_CNT      (state->label_cnt)
 #define DEFS        (state->definitions)
+#define DEF_CNT     (state->def_cnt)
 #define FIXUP       (state->fixups)
+#define FX_CNT      (state->fix_cnt)
 #define STATE       (state->result)
 #define LINE_CNT    (state->program.line_count)
 #define LINE(i)     (state->program.lines[i].line)
@@ -103,11 +108,12 @@ static int asm_parse_sum_arg(char* str, assembly_state* state, unsigned* flags);
  * Parse `lit_arg` grammar rule
  * 
  * @param[in]  str   Literal string
+ * @param[inout] state Current assembly state
  * @param[out] value Parsed literal
  * @param[out] flags `arg_flags` of an argument
  * @return 0 upon success, -1 otherwise
  */
-static int asm_parse_lit_arg(const char* str, int* value, unsigned* flags);
+static int asm_parse_lit_arg(const char* str, assembly_state* state, int* value, unsigned* flags);
 
 /**
  * @brief 
@@ -115,19 +121,79 @@ static int asm_parse_lit_arg(const char* str, int* value, unsigned* flags);
  * 
  * @param[in]  str   Literal string
  * @param[out] value Parsed literal
+ * @param[out] flags `arg_flags` of an argument
  * @return 0 upon success, -1 otherwise
  */
-static int asm_parse_register(const char* str, int *value);
+static int asm_parse_register(const char* str, int *value, unsigned* flags);
 
 /**
  * @brief 
- * Parse `register` grammar rule
+ * Parse `number` grammar rule
  * 
  * @param[in]  str   Literal string
  * @param[out] value Parsed literal
+ * @param[out] flags `arg_flags` of an argument
  * @return 0 upon success, -1 otherwise
  */
-static int asm_parse_number  (const char* str, int *value);
+static int asm_parse_number  (const char* str, int *value, unsigned* flags);
+
+/**
+ * @brief 
+ * Parse `name` grammar rule
+ * 
+ * @param[in]  str   Literal string
+ * @param[inout] state Current assembly state
+ * @param[out] value Parsed literal
+ * @param[out] flags `arg_flags` of an argument
+ * @return 0 upon success, -1 otherwise
+ */
+static int asm_parse_name  (const char* str, assembly_state* state,int *value, unsigned* flags);
+
+/**
+ * @brief 
+ * Add new label to array
+ * @param[in] name Label name
+ * @param[in] addr Label address
+ * @param[inout] state Current assembly state
+ * @return int 
+ */
+static int add_label(const char* name, long addr, assembly_state* state);
+
+/**
+ * @brief 
+ * Find label with given name in label array
+ * 
+ * @param[in] name Label name
+ * @param[in] state Assembly state
+ * @return pointer to label or NULL
+ */
+static asm_label* find_label (const char* name, const assembly_state* state);
+
+/**
+ * @brief 
+ * Find definition with given name in definition array
+ * 
+ * @param[in] name Definition name
+ * @param[in] state Assembly state
+ * @return pointer to definition or NULL
+ */
+static asm_def *find_def     (const char *name, const assembly_state *state);
+
+/**
+ * @brief 
+ * Fix unset label addresses in command array
+ * @param[inout] state Assembly state
+ * @return 0 upon success, -1 otherwise
+ */
+static int        run_fixup  (assembly_state* state);
+
+/**
+ * @brief 
+ * Check if string is a valid identifier
+ * @param[in] str String to be checked
+ * @return 1 if string is a valid identifier, 0 otherwise
+ */
+static int check_name(const char* str);
 
 int assemble(assembly_state* state)
 {
@@ -138,6 +204,9 @@ int assemble(assembly_state* state)
         int res = asm_parse_line(LINE(LINE_NUM), state);
         LOG_ASSERT(res != -1, return -1);
     }
+    int fixup = run_fixup(state);
+    LOG_ASSERT(fixup != -1, return -1);
+
     HEADER = {.header = {.signature = SIGNATURE,
                          .version   = LATEST_VERSION,
                          .opcnt     = IP}};
@@ -161,13 +230,59 @@ static int asm_parse_def(const char* str, assembly_state* state)
 
 static int asm_parse_code(const char* str, assembly_state* state)
 {
+    static const int BUFFER_SIZE = 256;
+    static char BUFFER[BUFFER_SIZE] = "";
+    const char *sep_ptr = strchr(str, ':');
+    if (sep_ptr != NULL)
+    {
+        size_t label_len = (size_t) (sep_ptr - str);
+        LOG_ASSERT(label_len < BUFFER_SIZE - 1, return -1);
+
+        strncpy(BUFFER, str, label_len);
+        BUFFER[label_len] = '\0';
+
+        int label_parsed = asm_parse_label(BUFFER, state);
+        LOG_ASSERT(label_parsed != -1, return 0);
+
+        str = sep_ptr + 1;
+    }
+    sep_ptr = strchr(str, ';');
+    
+    if(sep_ptr != NULL)
+    {
+        size_t command_len = (size_t) (sep_ptr - str);
+        LOG_ASSERT(command_len < BUFFER_SIZE - 1, return -1);
+
+        strncpy(BUFFER, str, command_len);
+        str = BUFFER;
+    }
+
     return asm_parse_command(str, state);
 }
 
-/* TODO: label support*/
 static int asm_parse_label(const char* str, assembly_state* state)
 {
-    return -1;
+    LOG_ASSERT_ERROR(check_name(str),
+        {STATE = ASM_NAME; return -1;},
+        "{%zu} '%s' is not a valid label name",
+        LINE_NUM + 1, str);
+    LOG_ASSERT_ERROR(find_def(str, state) == NULL,
+        {STATE = ASM_REDEF; return -1;},
+        "{%zu} Ambiguous label definition: '%s'.",
+        LINE_NUM + 1, str);
+    
+    asm_label* old_label = find_label(str, state);
+    if (old_label != NULL)
+    {
+        LOG_ASSERT_ERROR(old_label->addr == ADDR_UNSET,
+            {STATE = ASM_REDEF; return -1;},
+            "{%zu} Label '%s' redefinition.",
+            LINE_NUM + 1, str);
+        old_label->addr = (long) IP;
+        return 0;
+    }
+
+    return add_label(str, (long) IP, state);
 }
 
 static int asm_parse_command(const char* str, assembly_state* state)
@@ -185,9 +300,7 @@ static int asm_parse_command(const char* str, assembly_state* state)
             LOG_ASSERT(IP < CMD_LEN, return -1);                        \
             CMD[IP] = num;                                              \
             int parsed = asm_parse_arg_list(str + n_read, args, state); \
-            LOG_ASSERT_ERROR(parsed != -1, return -1,                   \
-                "Invalid arguments given to '%s': '%s'",                \
-                buffer, str);                                           \
+            LOG_ASSERT(parsed != -1, return -1);                        \
         } else
 
     #include "asm_cmd.h"
@@ -226,6 +339,15 @@ static int asm_parse_arg_list(const char* str, cmd_args args, assembly_state* st
                             ? ARG_RDWR
                             : ARG_RD;
 
+        if (flags == 0)
+            perms = ARG_LABEL;
+        else
+        {
+            perms = ARG_RD;
+            if ((flags & AF_MEM) || !(flags & AF_NUM))
+                perms |= ARG_WR;
+        }
+
         LOG_ASSERT_ERROR((perms & args.arg_list[i].perms) == args.arg_list[i].perms,
             {STATE = ASM_TYPE; return -1;},
             "{%zu} Argument '%s': invalid argument type",
@@ -263,16 +385,17 @@ static int asm_parse_sum_arg(char* str, assembly_state* state, unsigned* flags)
 {
     char* plusptr = strchr(str, '+');
     if (plusptr == NULL) /* no sum */
-        return asm_parse_lit_arg(str, &CMD[IP++], flags);
+        return asm_parse_lit_arg(str, state, &CMD[IP++], flags);
 
     /* two arguments */
     *plusptr = '\0';
     const char* argstr1 = str;
     const char* argstr2 = plusptr + 1;
     unsigned flags1 = 0;
-    int arg1 = asm_parse_lit_arg(argstr1, &CMD[IP++], &flags1);
-    int arg2 = asm_parse_lit_arg(argstr2, &CMD[IP++], flags);
-    *flags |= flags1;
+    unsigned flags2 = 0;
+    int arg1 = asm_parse_lit_arg(argstr1, state, &CMD[IP++], &flags1);
+    int arg2 = asm_parse_lit_arg(argstr2, state, &CMD[IP++], &flags2);
+    *flags |= flags1 | flags2;
     
     LOG_ASSERT_ERROR(arg1 != -1,
         {STATE = ASM_INVAL; return -1;},
@@ -286,10 +409,15 @@ static int asm_parse_sum_arg(char* str, assembly_state* state, unsigned* flags)
 
     unsigned sum_flags = (*flags) & (AF_NUM | AF_REG);
 
+    LOG_ASSERT_ERROR(flags1 != 0 && flags2 != 0,
+        {STATE = ASM_INVAL; return -1;},
+        "{%zu} Sum containing label is not a valid argument.",
+        LINE_NUM + 1);
+
     LOG_ASSERT_ERROR(sum_flags != AF_REG,
         {STATE = ASM_INVAL; return -1;},
         "{%zu} Sum of registers is not a valid argument.",
-        LINE_NUM);
+        LINE_NUM + 1);
 
     if (sum_flags == AF_NUM) /* same argument type */
     {
@@ -310,30 +438,29 @@ static int asm_parse_sum_arg(char* str, assembly_state* state, unsigned* flags)
     return 0;
 }
 
-static int asm_parse_lit_arg(const char* str, int* value, unsigned* flags)
+static int asm_parse_lit_arg(const char* str, assembly_state* state, int* value, unsigned* flags)
 {
-    if(asm_parse_register(str, value) != -1)
-    {
-        *flags |= AF_REG;
+    if(asm_parse_register(str, value, flags) != -1)
         return 0;
-    }
 
-    if(asm_parse_number  (str, value) != -1)
-    {
-        *flags |= AF_NUM;
+    if(asm_parse_number  (str, value, flags) != -1)
         return 0;
-    }
 
+    if(asm_parse_name    (str, state, value, flags) != -1)
+        return 0;
+
+    log_message(MSG_ERROR, "{%zu} Failed to parse literal: '%s'",
+            LINE_NUM + 1, str);
     return -1;
 }
 
-static int asm_parse_register(const char* str, int *value)
+static int asm_parse_register(const char* str, int *value, unsigned* flags)
 {
-    #define ASM_REG(name, num)\
-        if(strcasecmp(str, #name) == 0)\
-        {\
-            *value = num;\
-            return 0;\
+    #define ASM_REG(name, num)          \
+        if(strcasecmp(str, #name) == 0) \
+        {   *flags |= AF_REG;           \
+            *value = num;               \
+            return 0;                   \
         }
 
     #include "asm_reg.h"
@@ -342,7 +469,7 @@ static int asm_parse_register(const char* str, int *value)
     #undef ASM_REG
 }
 
-static int asm_parse_number(const char* str, int *value)
+static int asm_parse_number(const char* str, int *value, unsigned* flags)
 {
     int n_read = 0;
     int res = sscanf(str, "%d%n", value, &n_read);
@@ -350,7 +477,101 @@ static int asm_parse_number(const char* str, int *value)
     {
         LOG_ASSERT_ERROR(strempty(str + n_read), return -1,
             "Invalid number literal '%s'", str);
+        *flags |= AF_NUM;
         return 0;
     }
     return -1;
+}
+
+static int asm_parse_name  (const char* str, assembly_state* state, int *value, unsigned* flags)
+{
+    if (check_name(str) == -1)
+        return -1;
+    
+    asm_def* def_ptr = find_def(str, state);
+    if (def_ptr != NULL)
+    {
+        *value = def_ptr->value;
+        *flags |= AF_NUM;
+        return 0;
+    }
+    
+    asm_label* label_ptr = find_label(str, state);
+    if (label_ptr != NULL)
+    {
+        *value = label_ptr->addr;
+        /* flags are not set for label */
+        return 0;
+    }
+
+    add_label(str, ADDR_UNSET, state);
+
+    LOG_ASSERT_ERROR(FX_CNT < MAX_FIXUPS,
+        {STATE = ASM_FIXOVF; return -1;},
+        "Maximum number of fixups exceeded", NULL);
+    
+    FIXUP[FX_CNT++] = {
+        .label_number = LB_CNT - 1,
+        .addr = IP - 1 /* IP already shifted */
+    };
+    *value = ADDR_UNSET;
+    /* flags are not set for label */
+
+    return 0;
+}
+
+static asm_label* find_label (const char* name, const assembly_state* state)
+{
+    for (size_t i = 0; i < LB_CNT; i++)
+        if (strcmp(name, LABELS[i].name) == 0)
+            return &LABELS[i];
+    return NULL;
+}
+
+static asm_def* find_def (const char* name, const assembly_state* state)
+{
+    for (size_t i = 0; i < DEF_CNT; i++)
+        if (strcmp(name, DEFS[i].name) == 0)
+            return &DEFS[i];
+    return NULL;
+}
+
+static int run_fixup (assembly_state* state)
+{
+    for (size_t i = 0; i < FX_CNT; i++)
+    {
+        size_t label_num = FIXUP[i].label_number;
+        size_t addr      = FIXUP[i].addr;
+        LOG_ASSERT_ERROR(LABELS[label_num].addr != ADDR_UNSET,
+            {STATE = ASM_NDEF; return -1;},
+            "Label '%s' was not defined",
+            LABELS[label_num].name);
+
+        CMD[addr] = LABELS[label_num].addr;
+    }
+    return 0;
+}
+
+static int add_label(const char* name, long addr, assembly_state* state)
+{
+    LOG_ASSERT_ERROR(LB_CNT < MAX_LABELS,
+        {STATE = ASM_LABELOVF; return -1;},
+        "Maximum number of labels exceeded", NULL);
+    strcpy(LABELS[LB_CNT].name, name);
+    LABELS[LB_CNT].addr = addr;
+    LB_CNT++;
+    return 0;
+}
+
+static int check_name(const char* str)
+{
+    if (!isalpha(*str) && *str != '_') return 0;
+
+    while (*str)
+    {
+        if (!isalnum(*str) && *str != '_') return 0;
+        str++;
+    }
+
+    return 1;
 }

@@ -78,43 +78,6 @@ struct cmd_args
 };
 
 /**
- * @brief Wrapper for struct initializers
- * 
- * @param args `cmd_args` initializet
- * @return args
- */
-inline cmd_args get_arg(cmd_args args) { return args; }
-
-/**
- * @brief 
- * Description for virtual CPU command
- */
-struct command_description
-{
-    cpu_command command;
-    const char* name;
-    size_t      arg_count;
-};
-
-#define ASM_CMD(cmd_name, num, args, ...)\
-    { .command = (cpu_command) num, .name = #cmd_name, .arg_count = get_arg(args).arg_count },
-/**
- * @brief 
- * All commands array
- */
-const command_description COMMANDS[] =
-{
-    #include "asm_cmd.h"
-};
-#undef ASM_CMD
-
-/**
- * @brief 
- * Length of `COMMANDS` array
- */
-const size_t COMMAND_COUNT = sizeof(COMMANDS) / sizeof(*COMMANDS);
-
-/**
  * @brief 
  * Maximum number of arguments required for command
  */

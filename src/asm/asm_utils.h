@@ -21,16 +21,19 @@
  */
 enum assembly_result
 {
-    ASM_SUCCESS     = 0000,
-    ASM_UNCMD       = 0001,
-    ASM_ARGCNT      = 0002,
-    ASM_INVAL       = 0004,
-    ASM_TYPE        = 0010,
-    ASM_REDEF       = 0020,
-    ASM_SYNTAX      = ASM_UNCMD | ASM_ARGCNT | ASM_INVAL | ASM_TYPE | ASM_REDEF,
-    ASM_LABELOVF    = 0040,
-    ASM_DEFOVF      = 0100,
-    ASM_FIXOVF      = 0200
+    ASM_SUCCESS     = 00000,
+    ASM_UNCMD       = 00001,
+    ASM_ARGCNT      = 00002,
+    ASM_INVAL       = 00004,
+    ASM_TYPE        = 00010,
+    ASM_REDEF       = 00020,
+    ASM_NAME        = 00040,
+    ASM_NDEF        = 00100,
+    ASM_SYNTAX      = ASM_UNCMD | ASM_ARGCNT | ASM_INVAL | ASM_TYPE
+                    | ASM_REDEF | ASM_NAME   | ASM_NDEF,
+    ASM_LABELOVF    = 00200,
+    ASM_DEFOVF      = 00400,
+    ASM_FIXOVF      = 01000
 };
 
 /**
@@ -45,7 +48,7 @@ const size_t MAX_LABEL_LEN = 32;
  */
 struct asm_label
 {
-    char name[MAX_LABEL_LEN];
+    char name[MAX_LABEL_LEN + 1];
     long addr;
 };
 
@@ -65,7 +68,7 @@ struct fixup
  */
 struct asm_def
 {
-    char name[MAX_LABEL_LEN];
+    char name[MAX_LABEL_LEN + 1];
     int value;
 };
 
@@ -95,8 +98,11 @@ struct assembly_state
     int*            cmd;            /*<! command array */
     size_t          cmd_size;       /*<! length of command array*/
     asm_label*      labels;         /*<! array of labels */
+    size_t          label_cnt;      /*<! number of created labels */
     asm_def*        definitions;    /*<! array of constant definitions */
+    size_t          def_cnt;        /*<! number of created constant definitions */
     fixup*          fixups;         /*<! array of label fixups */
+    size_t          fix_cnt;        /*<! number of created label fixups */
     assembly_result result;         /*<! assembly result */
 };
 

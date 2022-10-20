@@ -1,19 +1,29 @@
-push    50
-push    30
-sub
+                ; 50 - 30
+                push    50
+                push    30
+                sub
 
-push    5
-push    3
-sub
+                ; 5 - 3
+                push    5
+                push    3
+                sub
 
-div
+                div                             ; (50 - 30) / (5 - 3)
 
-push    16
-pop     rax
+                push    16
+                pop     rax
 
-pop     [rax+2]
-push    [rax+2]
-push    [2+rax]
-out
-out
-halt
+                pop     [rax+2]                 ; duplicate value using RAM
+
+                push 5
+                pop rcx                         ; initialize loop counter
+
+loop_start:     push rcx
+                push 0
+                jle loop_end                    ; check exit condition
+
+                push [rax+2]
+                out                             ; print number
+
+                jmp loop_start                  ; repeat loop
+loop_end:       halt

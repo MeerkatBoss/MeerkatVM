@@ -15,6 +15,14 @@
 
 #define _ ,
 
+#define ASM_JMP(name, num, cmp)\
+    ASM_CMD(name, num, {.arg_count = 1 _ .arg_list = {{.perms = ARG_LABEL}}},\
+    {\
+        int op1 = POP _ op2 = POP;\
+        asm_arg argument = NEXT_ARG;\
+        if (op2 cmp op1) IP = *argument.val_ptr;\
+    })
+
 ASM_CMD(NOP, 0x00, {.arg_count = 0 _ .arg_list = {}}, {})
 
 ASM_CMD(ADD, 0x01, {.arg_count = 0 _ .arg_list = {}},
@@ -72,6 +80,19 @@ ASM_CMD(HALT,0x0A, {.arg_count = 0 _ .arg_list = {}},
 {
     STOP;
 })
+
+ASM_CMD(JMP, 0x0B, {.arg_count = 1 _ .arg_list = {{.perms = ARG_LABEL}}},
+{
+    asm_arg argument = NEXT_ARG;
+    IP = *argument.val_ptr;
+})
+
+ASM_JMP(JG, 0x0C, >)
+ASM_JMP(JL, 0x0D, <)
+ASM_JMP(JE, 0x0E, ==)
+ASM_JMP(JNE, 0x0F, !=)
+ASM_JMP(JGE, 0x10, >=)
+ASM_JMP(JLE, 0x11, <=)
 
 
 #undef _

@@ -1,19 +1,29 @@
-[0x0000] 27 32                 | push    50
-[0x0002] 27 1e                 | push    30
-[0x0004] 03                    | sub
+[0x0000]                       |                 ; 50 - 30
+[0x0000] 27 32                 |                 push    50
+[0x0002] 27 1e                 |                 push    30
+[0x0004] 03                    |                 sub
 [0x0005]                       | 
-[0x0005] 27 05                 | push    5
-[0x0007] 27 03                 | push    3
-[0x0009] 03                    | sub
+[0x0005]                       |                 ; 5 - 3
+[0x0005] 27 05                 |                 push    5
+[0x0007] 27 03                 |                 push    3
+[0x0009] 03                    |                 sub
 [0x000a]                       | 
-[0x000a] 06                    | div
+[0x000a] 06                    |                 div                             ; (50 - 30) / (5 - 3)
 [0x000b]                       | 
-[0x000b] 27 10                 | push    16
-[0x000d] 48 01                 | pop     rax
+[0x000b] 27 10                 |                 push    16
+[0x000d] 48 01                 |                 pop     rax
 [0x000f]                       | 
-[0x000f] e8 01 02              | pop     [rax+2]
-[0x0012] e7 01 02              | push    [rax+2]
-[0x0015] e7 01 02              | push    [2+rax]
-[0x0018] 09                    | out
-[0x0019] 09                    | out
-[0x001a] 0a                    | halt
+[0x000f] e8 01 02              |                 pop     [rax+2]                 ; duplicate value using RAM
+[0x0012]                       | 
+[0x0012] 27 05                 |                 push 5
+[0x0014] 48 03                 |                 pop rcx                         ; initialize loop counter
+[0x0016]                       | 
+[0x0016] 47 03                 | loop_start:     push rcx
+[0x0018] 27 00                 |                 push 0
+[0x001a] 11 22                 |                 jle loop_end                    ; check exit condition
+[0x001c]                       | 
+[0x001c] e7 01 02              |                 push [rax+2]
+[0x001f] 09                    |                 out                             ; print number
+[0x0020]                       | 
+[0x0020] 0b 16                 |                 jmp loop_start                  ; repeat loop
+[0x0022] 0a                    | loop_end:       halt
