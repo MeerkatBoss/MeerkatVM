@@ -254,6 +254,7 @@ static int asm_parse_code(const char* str, assembly_state* state)
         LOG_ASSERT(command_len < BUFFER_SIZE - 1, return -1);
 
         strncpy(BUFFER, str, command_len);
+        BUFFER[command_len] = '\0';
         str = BUFFER;
     }
 

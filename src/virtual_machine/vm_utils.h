@@ -14,8 +14,11 @@
 
 #include "int_stack.h"
 
-const int REG_COUNT = 5;
-const int MEM_SIZE  = 1024;
+const int REG_COUNT = 6;
+const int MEM_SIZE  = 1 << 16;
+const int VIDEO_BUF_START = MEM_SIZE / 2;
+const int SCREEN_WIDTH  = 100;
+const int SCREEN_HEIGHT = 40;
 
 struct proc_state
 {
@@ -25,7 +28,7 @@ struct proc_state
     int*    cmd;
     Stack*  value_stack;
     Stack*  call_stack;
-    int     memory[MEM_SIZE];
+    int     *memory;
 };
 
 proc_state proc_ctor(const char* program_file);

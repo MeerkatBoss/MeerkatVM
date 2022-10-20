@@ -1,33 +1,34 @@
-                ; 50 - 30
-                push    50
-                push    30
-                sub
+		; 50 - 30
+		push    50
+		push    30
+		sub
 
-                ; 5 - 3
-                push    5
-                push    3
-                sub
+		; 5 - 3
+		push    5
+		push    3
+		sub
 
-                div                             ; (50 - 30) / (5 - 3)
+		div			; (50 - 30) / (5 - 3)
 
-                push    16
-                pop     rax
+		push 5
+		call print_ntimes
+		halt
 
-                pop     [rax+2]                 ; duplicate value using RAM
 
-                push 5
-                pop rcx                         ; initialize loop counter
+print_ntimes:	pop rcx			; initialize loop counter
+		pop rax			; store data
 
-loop_start:     push rcx
-                push 0
-                jle loop_end                    ; check exit condition
+p_loop_start:	push rcx
+		push 0
+		jle p_loop_end		; check exit condition
 
-                push [rax+2]
-                out                             ; print number
+		push rax
+		out			; print number
 
-                pop rcx                         ; decrement counter
-                dec
-                push rcx
+		push rcx		; decrement counter
+		dec
+		pop rcx
 
-                jmp loop_start                  ; repeat loop
-loop_end:       halt
+		jmp p_loop_start	; repeat loop
+p_loop_end:	ret
+

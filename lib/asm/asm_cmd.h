@@ -96,12 +96,25 @@ ASM_CMD(JMP, 0x0B, {.arg_count = 1 _ .arg_list = {{.perms = ARG_LABEL}}},
     IP = *argument.val_ptr - 1;
 })
 
-ASM_JMP(JG, 0x0C, >)
-ASM_JMP(JL, 0x0D, <)
-ASM_JMP(JE, 0x0E, ==)
+ASM_JMP(JG,  0x0C, >)
+ASM_JMP(JL,  0x0D, <)
+ASM_JMP(JE,  0x0E, ==)
 ASM_JMP(JNE, 0x0F, !=)
 ASM_JMP(JGE, 0x10, >=)
 ASM_JMP(JLE, 0x11, <=)
+
+ASM_CMD(CALL,0x12, {.arg_count = 1 _ .arg_list = {{.perms = ARG_LABEL}}},
+{
+    asm_arg argument = NEXT_ARG;
+    PUSH_CALL;
+    IP = *argument.val_ptr - 1;
+})
+
+ASM_CMD(RET, 0x13, {},
+{
+    ASSERT(CALL_DEPTH >= 1, "No call to return from");
+    IP = POP_CALL;
+})
 
 
 #undef _

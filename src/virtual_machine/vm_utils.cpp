@@ -32,10 +32,10 @@ proc_state proc_ctor(const char* program_file)
         .registers      = {0, 0, 0, 0, 0},
         .cmd            = (int*)(bytes + HEADER_SIZE),
         .value_stack    = value_stack,
-        .call_stack     = call_stack
+        .call_stack     = call_stack,
+        .memory         = (int*) calloc(MEM_SIZE, sizeof(int))
     };
 }
-
 
 void proc_dtor(proc_state* cpu)
 {
@@ -46,6 +46,7 @@ void proc_dtor(proc_state* cpu)
     StackDtor(cpu->call_stack);
     free(cpu->value_stack);
     free(cpu->call_stack);
+    free(cpu->memory);
 }
 
 static asm_arg next_parameter(proc_state* cpu);
@@ -55,6 +56,9 @@ static asm_arg next_parameter(proc_state* cpu);
 #define STACK               (cpu->value_stack)
 #define ST_SIZE             (cpu->value_stack->size)
 #define CALL_STACK          (cpu->call_stack)
+#define CALL_DEPTH          (cpu->call_stack->size)
+#define PUSH_CALL           StackPush(CALL_STACK, IP)
+#define POP_CALL            StackPopCopy(CALL_STACK, NULL)
 #define RAM                 (cpu->memory)
 #define IP                  (cpu->registers[REG_IP])
 #define PUSH(value)         StackPush(cpu->value_stack, (value))
@@ -83,7 +87,7 @@ int proc_run(proc_state *cpu)
         }
 
         IP++;
-        StackDump(cpu->value_stack);
+        //StackDump(cpu->value_stack);
     }
 
     #undef ASM_CMD

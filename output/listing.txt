@@ -1,33 +1,35 @@
-[0x0000]                       |                 ; 50 - 30
-[0x0000] 27 32                 |                 push    50
-[0x0002] 27 1e                 |                 push    30
-[0x0004] 03                    |                 sub
+[0x0000]                       | 		; 50 - 30
+[0x0000] 27 32                 | 		push    50
+[0x0002] 27 1e                 | 		push    30
+[0x0004] 03                    | 		sub
 [0x0005]                       | 
-[0x0005]                       |                 ; 5 - 3
-[0x0005] 27 05                 |                 push    5
-[0x0007] 27 03                 |                 push    3
-[0x0009] 03                    |                 sub
+[0x0005]                       | 		; 5 - 3
+[0x0005] 27 05                 | 		push    5
+[0x0007] 27 03                 | 		push    3
+[0x0009] 03                    | 		sub
 [0x000a]                       | 
-[0x000a] 06                    |                 div                             ; (50 - 30) / (5 - 3)
+[0x000a] 06                    | 		div			; (50 - 30) / (5 - 3)
 [0x000b]                       | 
-[0x000b] 27 10                 |                 push    16
-[0x000d] 48 01                 |                 pop     rax
-[0x000f]                       | 
-[0x000f] e8 01 02              |                 pop     [rax+2]                 ; duplicate value using RAM
-[0x0012]                       | 
-[0x0012] 27 05                 |                 push 5
-[0x0014] 48 03                 |                 pop rcx                         ; initialize loop counter
-[0x0016]                       | 
-[0x0016] 47 03                 | loop_start:     push rcx
-[0x0018] 27 00                 |                 push 0
-[0x001a] 11 27                 |                 jle loop_end                    ; check exit condition
-[0x001c]                       | 
-[0x001c] e7 01 02              |                 push [rax+2]
-[0x001f] 09                    |                 out                             ; print number
-[0x0020]                       | 
-[0x0020] 48 03                 |                 pop rcx                         ; decrement counter
-[0x0022] 04                    |                 dec
-[0x0023] 47 03                 |                 push rcx
+[0x000b] 27 05                 | 		push 5
+[0x000d] 12 10                 | 		call print_ntimes
+[0x000f] 0a                    | 		halt
+[0x0010]                       | 
+[0x0010]                       | 
+[0x0010] 48 03                 | print_ntimes:	pop rcx			; initialize loop counter
+[0x0012] 48 01                 | 		pop rax			; store data
+[0x0014]                       | 
+[0x0014] 47 03                 | p_loop_start:	push rcx
+[0x0016] 27 00                 | 		push 0
+[0x0018] 11 24                 | 		jle p_loop_end		; check exit condition
+[0x001a]                       | 
+[0x001a] 47 01                 | 		push rax
+[0x001c] 09                    | 		out			; print number
+[0x001d]                       | 
+[0x001d] 47 03                 | 		push rcx		; decrement counter
+[0x001f] 04                    | 		dec
+[0x0020] 48 03                 | 		pop rcx
+[0x0022]                       | 
+[0x0022] 0b 14                 | 		jmp p_loop_start	; repeat loop
+[0x0024] 13                    | p_loop_end:	ret
 [0x0025]                       | 
-[0x0025] 0b 16                 |                 jmp loop_start                  ; repeat loop
-[0x0027] 0a                    | loop_end:       halt
+[0x0025]                       | 
