@@ -1,7 +1,7 @@
 /**
  * @file main.cpp
- * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
- * @brief Code assembler for virtual processor. Human readable text goes in, machine-readable binary goes out.
+ * @author MeerkatBoss (solodovnikov.ia@phystech.edu)
+ * @brief Code assembler for virtual machine
  * @version 0.1
  * @date 2022-10-18
  * 
@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "asm_utils.h"
+#include "asm_parser.h"
 #include "asm_flags.h"
 #include "logger.h"
 
@@ -41,44 +41,22 @@ int main(int argc, char** argv)
         "Invalid command-line options", NULL);
 
     const char* filepath = argv[argc - 1];
-    TextLines text_lines = read_file(filepath);
-    LOG_ASSERT_ERROR(text_lines.text != NULL, 
-        {
-            dispose_lines(&text_lines);
-            return STATUS_INPUT_ERROR;
-        },
-        "Could not read file \'%s\'", filepath);
 
-    assembly_state *result = (assembly_state*) calloc(1, sizeof(*result));
-    int status = assemble(&text_lines, result);
+    assembly_state *state = assembly_state_ctor(filepath);
+    int status = assemble(state);
     LOG_ASSERT_ERROR(status != -1,
         {
-            dispose_lines(&text_lines);
-            if (result->cmd)
-                free(result->cmd);
-            free(result);
+            assembly_state_dtor(state);
             return STATUS_INPUT_ERROR;
         },
-        "Assembly of file %s failed.", filepath);
+        "Assembly of file '%s' failed.", filepath);
 
     if (listing_file)
-        print_listing(listing_file, &text_lines, result->cmd);
+        print_listing(listing_file, state);
 
-    int output_fd = creat(output_file, S_IWUSR | S_IRUSR);
-    LOG_ASSERT_ERROR(output_fd != -1,
-        {
-            dispose_lines(&text_lines);
-            free(result->cmd);
-            free(result);
-            return STATUS_INPUT_ERROR;
-        },
-        "Could not create output file %s", output_file);
-    write(output_fd, &result->header, sizeof(result->header));
-    write(output_fd, result->cmd, result->ip*sizeof(*result->cmd));
-    close(output_fd);
-    
-    dispose_lines(&text_lines);
-    free(result->cmd);
-    free(result);
-    return STATUS_SUCCESS;
+    status = create_executable(output_file, state);
+
+    assembly_state_dtor(state);
+
+    return status == 0 ? STATUS_SUCCESS : STATUS_INPUT_ERROR;
 }

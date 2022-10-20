@@ -1,5 +1,5 @@
 #include "logger.h"
-#include "vcpu_utils.h"
+#include "vm_utils.h"
 
 enum status
 {

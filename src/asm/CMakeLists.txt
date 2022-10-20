@@ -1,4 +1,4 @@
-add_executable(asm main.cpp asm_utils.cpp asm_flags.cpp)
+add_executable(asm main.cpp asm_utils.cpp asm_flags.cpp asm_parser.cpp)
 
 target_link_libraries(asm PRIVATE libargparser liblogs libasm libinput)
 

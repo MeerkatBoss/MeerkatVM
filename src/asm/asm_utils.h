@@ -21,11 +21,16 @@
  */
 enum assembly_result
 {
-    ASM_SUCCESS     = 0,
-    ASM_SYNTAX      = -1,
-    ASM_LABEL_OVF   = -2,
-    ASM_DEFS_OVF    = -3,
-    ASM_FIXUP_OVF   = -4
+    ASM_SUCCESS     = 0000,
+    ASM_UNCMD       = 0001,
+    ASM_ARGCNT      = 0002,
+    ASM_INVAL       = 0004,
+    ASM_TYPE        = 0010,
+    ASM_REDEF       = 0020,
+    ASM_SYNTAX      = ASM_UNCMD | ASM_ARGCNT | ASM_INVAL | ASM_TYPE | ASM_REDEF,
+    ASM_LABELOVF    = 0040,
+    ASM_DEFOVF      = 0100,
+    ASM_FIXOVF      = 0200
 };
 
 /**
@@ -41,7 +46,7 @@ const size_t MAX_LABEL_LEN = 32;
 struct asm_label
 {
     char name[MAX_LABEL_LEN];
-    ssize_t addr;
+    long addr;
 };
 
 /**
@@ -79,31 +84,36 @@ const size_t MAX_FIXUPS = MAX_LABELS * 4;
 /**
  * @brief 
  * State of assembly process
- * 
- * @warning
- * Size of this struct exceeds 8kB. Avoid stack-allocating or
- * copying it
  */
 struct assembly_state
 {
-    padded_header   header;
-    size_t          ip;
-    int*            cmd;
-    size_t          cmd_size;
-    asm_label       labels[MAX_LABELS];
-    asm_def         definitions[MAX_LABELS];
-    fixup           fixups[MAX_FIXUPS];
-    assembly_result result;
+    padded_header   header;         /*<! program file header */
+    TextLines       program;        /*<! program file text lines */
+    size_t          line_num;       /*<! number of line being processed */
+    size_t*         line_addr;      /*<! IP, at which code for given line starts */
+    size_t          ip;             /*<! instruction pointer*/
+    int*            cmd;            /*<! command array */
+    size_t          cmd_size;       /*<! length of command array*/
+    asm_label*      labels;         /*<! array of labels */
+    asm_def*        definitions;    /*<! array of constant definitions */
+    fixup*          fixups;         /*<! array of label fixups */
+    assembly_result result;         /*<! assembly result */
 };
 
 /**
  * @brief 
- * Assemble program from lines
- * @param[in] text_lines Program lines
- * @param[out] state     Assembly state
- * @return 0 upon success, -1 otherwise
+ * Construct `assembly_state`
+ * @param[in] filename Program file name
+ * @return Allocated and constructed `assembly_state`
  */
-int assemble(TextLines* text_lines, assembly_state* state);
+assembly_state* assembly_state_ctor(const char* filename);
+
+/**
+ * @brief 
+ * Destroy and free `assembly_state` and its associated resources
+ * @param[inout] state State to be destroyed
+ */
+void assembly_state_dtor(assembly_state* state);
 
 /**
  * @brief 
@@ -112,6 +122,22 @@ int assemble(TextLines* text_lines, assembly_state* state);
  * @param[in] text_lines Array of lines
  * @param[in] cmd_array  Array of parsed commands
  */
-void print_listing(const char* filename, const TextLines* text_lines, const void* cmd_array);
+void print_listing(const char* filename, const assembly_state* state);
+
+/**
+ * @brief 
+ * Create executable file from `assembly_state`
+ * @param[in] filename Output file name
+ * @param[in] state    Assembly state
+ */
+int create_executable(const char* filename, const assembly_state* state);
+
+/**
+ * @brief 
+ * Check if string consists only of whitespace characters
+ * @param[in] str Checked string
+ * @return 0 if string is not empty, non-zero otherwise
+ */
+int strempty(const char* str);
 
 #endif
