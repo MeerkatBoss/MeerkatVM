@@ -202,7 +202,7 @@ int assemble(assembly_state* state)
         LINE_ADDR[LINE_NUM] = IP;
 
         int res = asm_parse_line(LINE(LINE_NUM), state);
-        LOG_ASSERT(res != -1, return -1);
+        LOG_ASSERT(res != -1, continue);
     }
     int fixup = run_fixup(state);
     LOG_ASSERT(fixup != -1, return -1);
@@ -235,14 +235,11 @@ static int asm_parse_code(const char* str, assembly_state* state)
     const char *sep_ptr = strchr(str, ':');
     if (sep_ptr != NULL)
     {
-        size_t label_len = (size_t) (sep_ptr - str);
-        LOG_ASSERT(label_len < BUFFER_SIZE - 1, return -1);
-
-        strncpy(BUFFER, str, label_len);
-        BUFFER[label_len] = '\0';
+        sscanf(str, " %[^:]", BUFFER);
+        size_t label_len = strlen(BUFFER);
 
         int label_parsed = asm_parse_label(BUFFER, state);
-        LOG_ASSERT(label_parsed != -1, return 0);
+        LOG_ASSERT(label_parsed != -1, return -1);
 
         str = sep_ptr + 1;
     }
@@ -566,11 +563,24 @@ static int add_label(const char* name, long addr, assembly_state* state)
 
 static int check_name(const char* str)
 {
-    if (!isalpha(*str) && *str != '_') return 0;
+    if (!isalpha(*str) && *str != '_' && *str != '.')
+        return 0;
+
+    #define ASM_CMD(name,...)\
+        if (strcasecmp(str, #name) == 0) return 0;
+    #define ASM_REG(name,...)\
+        if (strcasecmp(str, #name) == 0) return 0;
+
+    #include "asm_cmd.h"
+    #include "asm_reg.h"
+
+    #undef ASM_CMD
+    #undef ASM_REG
 
     while (*str)
     {
-        if (!isalnum(*str) && *str != '_') return 0;
+        if (!isalnum(*str) && *str != '_' && *str != '.')
+            return 0;
         str++;
     }
 

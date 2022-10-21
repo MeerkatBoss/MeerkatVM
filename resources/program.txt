@@ -77,6 +77,6 @@ on_circle:	push rax
 		push 0			; 3x^2 + 11y^2 > 3 * 30^2
 		ret
 	
-c_true:		push 1			; 3x^2 + 11y^2 <= 3 * 30^2
+	c_true:	push 1			; 3x^2 + 11y^2 <= 3 * 30^2
 		ret
 

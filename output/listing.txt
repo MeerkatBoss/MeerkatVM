@@ -1,26 +1,26 @@
 [0x0000] 27 190                |			push 400
-[0x0002] 48 05                 |			pop vbp				; clear screen
+[0x0002] 48 05                 |			pop vbp			; clear screen
 [0x0004]                       |	
 [0x0004] 27 00                 |			push 0
-[0x0006] 48 01                 |			pop rax				; rax = 0
+[0x0006] 48 01                 |			pop rax			; rax = 0
 [0x0008]                       |	
 [0x0008] 47 01                 |	row_loop_start:	push rax
 [0x000a] 27 28                 |			push 40
-[0x000c] 10 34                 |			jge row_loop_end		; if (rax >= 40) break
+[0x000c] 10 34                 |			jge row_loop_end	; if (rax >= 40) break
 [0x000e]                       |	
 [0x000e] 27 00                 |			push 0
-[0x0010] 48 02                 |			pop rbx				; rbx = 0
+[0x0010] 48 02                 |			pop rbx			; rbx = 0
 [0x0012]                       |	
 [0x0012] 47 02                 |	col_loop_start:	push rbx
 [0x0014] 27 64                 |			push 100
-[0x0016] 10 2d                 |			jge col_loop_end		; if (rbx >= 100) break
+[0x0016] 10 2d                 |			jge col_loop_end	; if (rbx >= 100) break
 [0x0018]                       |	
 [0x0018] 47 01                 |			push rax
 [0x001a] 27 64                 |			push 100
 [0x001c] 05                    |			mul
 [0x001d] 47 02                 |			push rbx
 [0x001f] 01                    |			add
-[0x0020] 48 04                 |			pop rdx				; rdx = 100*rax + rbx
+[0x0020] 48 04                 |			pop rdx			; rdx = 100*rax + rbx
 [0x0022]                       |	
 [0x0022] 12 39                 |			call on_circle
 [0x0024]                       |	
@@ -28,18 +28,18 @@
 [0x0026]                       |	
 [0x0026] 47 02                 |			push rbx
 [0x0028] 02                    |			inc
-[0x0029] 48 02                 |			pop rbx				; increment column number
+[0x0029] 48 02                 |			pop rbx			; increment column number
 [0x002b]                       |			
 [0x002b] 0b 12                 |			jmp col_loop_start
 [0x002d]                       |	
 [0x002d] 47 01                 |	col_loop_end:	push rax
 [0x002f] 02                    |			inc
-[0x0030] 48 01                 |			pop rax				; increment row number
+[0x0030] 48 01                 |			pop rax			; increment row number
 [0x0032]                       |			
 [0x0032] 0b 08                 |			jmp row_loop_start
 [0x0034]                       |	
 [0x0034] 27 00                 |	row_loop_end:	push 0
-[0x0036] 48 05                 |			pop vbp				; display buffer
+[0x0036] 48 05                 |			pop vbp			; display buffer
 [0x0038]                       |	
 [0x0038] 0a                    |			halt
 [0x0039]                       |	
@@ -77,7 +77,7 @@
 [0x005f] 27 00                 |			push 0			; 3x^2 + 11y^2 > 3 * 30^2
 [0x0061] 13                    |			ret
 [0x0062]                       |		
-[0x0062] 27 01                 |	c_true:		push 1			; 3x^2 + 11y^2 <= 3 * 30^2
+[0x0062] 27 01                 |		c_true:	push 1			; 3x^2 + 11y^2 <= 3 * 30^2
 [0x0064] 13                    |			ret
 [0x0065]                       |	
 [0x0065]                       |	
