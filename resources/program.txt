@@ -85,9 +85,9 @@ on_circle:	push rax
 		mul			; ar^2
 		jle c_true
 
-		push 0			; 3x^2 + 11y^2 > 3 * 30^2
+		push 0			; a(x-x0)^2 + b(y-y0)^2 > ar^2
 		ret
 	
-	c_true:	push 1			; 3x^2 + 11y^2 <= 3 * 30^2
+	c_true:	push 1			; a(x-x0)^2 + b(y-y0)^2 <= ar^2
 		ret
 

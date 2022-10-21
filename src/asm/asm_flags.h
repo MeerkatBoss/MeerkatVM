@@ -17,14 +17,18 @@
 /**
  * @brief 
  * Output file name
+ * 
+ * TODO: avoid global variables
  */
-#define output_file (*output_file_addr_())
+#define OUTPUT_FILE (*output_file_addr_())
 
 /**
  * @brief 
  * Listing file name
+ * 
+ * TODO: avoid global variables
  */
-#define listing_file (*listing_file_addr_())
+#define LISTING_FILE (*listing_file_addr_())
 
 const char** output_file_addr_();
 const char** listing_file_addr_();

@@ -1,7 +1,7 @@
 /**
  * @file argparser.h
- * @author Solodovnikov Ivan (solodovnikov.ia@phystech.edu)
- * @brief Program for disassembling virtual processor instructions. It is written in imaginary whitespace, though...
+ * @author MeerkatBoss (solodovnikov.ia@phystech.edu)
+ * @brief Program for disassembling virtual processor instructions.
  * @version 0.1
  * @date 2022-10-18
  * 
@@ -9,11 +9,28 @@
  * 
  */
 
-/**
- * @brief Probably one of the loneliest main()-s in the world.
- * 
- */
-int main()
+#include "logger.h"
+#include "disasm_utils.h"
+
+int main(int argc, char** argv)
 {
-    return 0;
+    add_default_file_logger();
+    add_logger(
+        {
+            .name = "Console output",
+            .stream = stdout,
+            .logging_level = LOG_ERROR,
+            .settings_mask = LGS_USE_ESCAPE | LGS_KEEP_OPEN
+        });
+
+    LOG_ASSERT_ERROR(argc == 2, return -1,
+        "Invalid program usage", NULL);
+
+    disasm_state* state = disasm_ctor(argv[1]);
+    int result = disassemble("disasm.txt", state);
+    state->ip = 0;
+    result = disassemble("disasm.txt", state);
+    disasm_dtor(state);
+
+    return result;
 }

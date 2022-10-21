@@ -21,7 +21,7 @@ int set_output_file(const char* const * strargs)
 
     LOG_ASSERT_ERROR(!called, return -1,
         "Output file specified more than once", NULL);
-    output_file = *strargs;
+    OUTPUT_FILE = *strargs;
     called = 1;
     return 0;
 }
@@ -34,7 +34,7 @@ int add_listing(const char* const* strargs)
 
     LOG_ASSERT_ERROR(!called, return -1,
         "Listing file specified more than once", NULL);
-    listing_file = *strargs;
+    LISTING_FILE = *strargs;
     called = 1;
     return 0;
 }

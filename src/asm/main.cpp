@@ -51,10 +51,10 @@ int main(int argc, char** argv)
         },
         "Assembly of file '%s' failed.", filepath);
 
-    if (listing_file)
-        print_listing(listing_file, state);
+    if (LISTING_FILE)
+        print_listing(LISTING_FILE, state);
 
-    status = create_executable(output_file, state);
+    status = create_executable(OUTPUT_FILE, state);
 
     assembly_state_dtor(state);
 
