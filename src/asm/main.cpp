@@ -43,6 +43,8 @@ int main(int argc, char** argv)
     const char* filepath = argv[argc - 1];
 
     assembly_state *state = assembly_state_ctor(filepath);
+    LOG_ASSERT(state != NULL, return STATUS_INPUT_ERROR);
+
     int status = assemble(state);
     LOG_ASSERT_ERROR(status != -1,
         {

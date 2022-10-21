@@ -1,0 +1,27 @@
+		%def x 5
+
+		push x
+		pop rax
+
+		call factorial
+		out
+		halt
+
+	
+factorial:	push rax	; check if x is 1
+		push 1
+		jle fact_stop
+
+		push rax	; save rax
+
+		push rax
+		dec
+		pop rax		; decrement rax
+
+		call factorial
+		mul
+
+		ret
+
+fact_stop:	push 1
+		ret
