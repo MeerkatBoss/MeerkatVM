@@ -16,7 +16,6 @@
 
 const int REG_COUNT = 6;
 const int MEM_SIZE  = 1 << 16;
-const int VIDEO_BUF_START = MEM_SIZE / 2;
 const int SCREEN_WIDTH  = 100;
 const int SCREEN_HEIGHT = 40;
 

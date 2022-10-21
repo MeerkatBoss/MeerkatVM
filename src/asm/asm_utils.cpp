@@ -98,7 +98,7 @@ void print_listing(const char* filename, const assembly_state* state)
             fprintf(listing, " " BYTE_FORMAT "%n", (unsigned)CMD[j], &printed);
             total_chars += printed;
         }
-        fprintf(listing, "%*s %s\n", ASM_WIDTH - total_chars, "|", LINE(i));
+        fprintf(listing, "%*s\t%s\n", ASM_WIDTH - total_chars, "|", LINE(i));
     }
 
     fclose(listing);

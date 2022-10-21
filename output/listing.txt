@@ -1,35 +1,83 @@
-[0x0000]                       | 		; 50 - 30
-[0x0000] 27 32                 | 		push    50
-[0x0002] 27 1e                 | 		push    30
-[0x0004] 03                    | 		sub
-[0x0005]                       | 
-[0x0005]                       | 		; 5 - 3
-[0x0005] 27 05                 | 		push    5
-[0x0007] 27 03                 | 		push    3
-[0x0009] 03                    | 		sub
-[0x000a]                       | 
-[0x000a] 06                    | 		div			; (50 - 30) / (5 - 3)
-[0x000b]                       | 
-[0x000b] 27 05                 | 		push 5
-[0x000d] 12 10                 | 		call print_ntimes
-[0x000f] 0a                    | 		halt
-[0x0010]                       | 
-[0x0010]                       | 
-[0x0010] 48 03                 | print_ntimes:	pop rcx			; initialize loop counter
-[0x0012] 48 01                 | 		pop rax			; store data
-[0x0014]                       | 
-[0x0014] 47 03                 | p_loop_start:	push rcx
-[0x0016] 27 00                 | 		push 0
-[0x0018] 11 24                 | 		jle p_loop_end		; check exit condition
-[0x001a]                       | 
-[0x001a] 47 01                 | 		push rax
-[0x001c] 09                    | 		out			; print number
-[0x001d]                       | 
-[0x001d] 47 03                 | 		push rcx		; decrement counter
-[0x001f] 04                    | 		dec
-[0x0020] 48 03                 | 		pop rcx
-[0x0022]                       | 
-[0x0022] 0b 14                 | 		jmp p_loop_start	; repeat loop
-[0x0024] 13                    | p_loop_end:	ret
-[0x0025]                       | 
-[0x0025]                       | 
+[0x0000] 27 190                |			push 400
+[0x0002] 48 05                 |			pop vbp				; clear screen
+[0x0004]                       |	
+[0x0004] 27 00                 |			push 0
+[0x0006] 48 01                 |			pop rax				; rax = 0
+[0x0008]                       |	
+[0x0008] 47 01                 |	row_loop_start:	push rax
+[0x000a] 27 28                 |			push 40
+[0x000c] 10 34                 |			jge row_loop_end		; if (rax >= 40) break
+[0x000e]                       |	
+[0x000e] 27 00                 |			push 0
+[0x0010] 48 02                 |			pop rbx				; rbx = 0
+[0x0012]                       |	
+[0x0012] 47 02                 |	col_loop_start:	push rbx
+[0x0014] 27 64                 |			push 100
+[0x0016] 10 2d                 |			jge col_loop_end		; if (rbx >= 100) break
+[0x0018]                       |	
+[0x0018] 47 01                 |			push rax
+[0x001a] 27 64                 |			push 100
+[0x001c] 05                    |			mul
+[0x001d] 47 02                 |			push rbx
+[0x001f] 01                    |			add
+[0x0020] 48 04                 |			pop rdx				; rdx = 100*rax + rbx
+[0x0022]                       |	
+[0x0022] 12 39                 |			call on_circle
+[0x0024]                       |	
+[0x0024] c8 04                 |			pop [rdx]
+[0x0026]                       |	
+[0x0026] 47 02                 |			push rbx
+[0x0028] 02                    |			inc
+[0x0029] 48 02                 |			pop rbx				; increment column number
+[0x002b]                       |			
+[0x002b] 0b 12                 |			jmp col_loop_start
+[0x002d]                       |	
+[0x002d] 47 01                 |	col_loop_end:	push rax
+[0x002f] 02                    |			inc
+[0x0030] 48 01                 |			pop rax				; increment row number
+[0x0032]                       |			
+[0x0032] 0b 08                 |			jmp row_loop_start
+[0x0034]                       |	
+[0x0034] 27 00                 |	row_loop_end:	push 0
+[0x0036] 48 05                 |			pop vbp				; display buffer
+[0x0038]                       |	
+[0x0038] 0a                    |			halt
+[0x0039]                       |	
+[0x0039]                       |	
+[0x0039]                       |	
+[0x0039] 47 01                 |	on_circle:	push rax
+[0x003b] 27 14                 |			push 20
+[0x003d] 03                    |			sub
+[0x003e] 47 01                 |			push rax
+[0x0040] 27 14                 |			push 20
+[0x0042] 03                    |			sub
+[0x0043] 05                    |			mul			; y^2
+[0x0044] 27 0b                 |			push 11
+[0x0046] 05                    |			mul			; 11y^2
+[0x0047]                       |	
+[0x0047] 47 02                 |			push rbx
+[0x0049] 27 32                 |			push 50
+[0x004b] 03                    |			sub
+[0x004c] 47 02                 |			push rbx
+[0x004e] 27 32                 |			push 50
+[0x0050] 03                    |			sub
+[0x0051] 05                    |			mul			; x^2
+[0x0052] 27 03                 |			push 3			; 3x^2
+[0x0054] 05                    |			mul
+[0x0055]                       |	
+[0x0055] 01                    |			add			; 3x^2 + 11y^2
+[0x0056]                       |	
+[0x0056] 27 1e                 |			push 30
+[0x0058] 14                    |			dup
+[0x0059] 05                    |			mul
+[0x005a] 27 03                 |			push 3
+[0x005c] 05                    |			mul			; 3 * 30^2
+[0x005d] 11 62                 |			jle c_true
+[0x005f]                       |	
+[0x005f] 27 00                 |			push 0			; 3x^2 + 11y^2 > 3 * 30^2
+[0x0061] 13                    |			ret
+[0x0062]                       |		
+[0x0062] 27 01                 |	c_true:		push 1			; 3x^2 + 11y^2 <= 3 * 30^2
+[0x0064] 13                    |			ret
+[0x0065]                       |	
+[0x0065]                       |	

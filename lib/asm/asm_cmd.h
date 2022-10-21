@@ -77,6 +77,8 @@ ASM_CMD(POP, 0x08, {.arg_count = 1 _ .arg_list = {{.perms = ARG_WR}}},
     asm_arg argument = NEXT_ARG;
     ASSERT(argument.perms & ARG_WR, "Cannot pop to given address.");
     *argument.val_ptr = POP;
+    if (argument.val_ptr == &REGS[REG_VBP])
+        REFRESH;
 })
 
 ASM_CMD(OUT, 0x09, {.arg_count = 0 _ .arg_list = {}},
@@ -114,6 +116,14 @@ ASM_CMD(RET, 0x13, {},
 {
     ASSERT(CALL_DEPTH >= 1, "No call to return from");
     IP = POP_CALL;
+})
+
+ASM_CMD(DUP, 0x14, {},
+{
+    ASSERT(ST_SIZE >= 1, "Cannot pop empty stack");
+    int tmp = POP;
+    PUSH(tmp);
+    PUSH(tmp);
 })
 
 

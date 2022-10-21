@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "assembler.h"
 
+
 proc_state proc_ctor(const char* program_file)
 {
     char* bytes = NULL;
@@ -50,6 +51,7 @@ void proc_dtor(proc_state* cpu)
 }
 
 static asm_arg next_parameter(proc_state* cpu);
+static void refresh_screen(const proc_state* cpu);
 
 #define CMD                 (cpu->cmd)
 #define REGS                (cpu->registers)
@@ -64,6 +66,7 @@ static asm_arg next_parameter(proc_state* cpu);
 #define PUSH(value)         StackPush(cpu->value_stack, (value))
 #define POP                 StackPopCopy(cpu->value_stack, NULL)
 #define NEXT_ARG            next_parameter(cpu)
+#define REFRESH             refresh_screen(cpu)
 #define STOP                return 0
 #define ASSERT(cond, msg)   LOG_ASSERT_ERROR(cond, return -1, msg, NULL)
 
@@ -87,7 +90,6 @@ int proc_run(proc_state *cpu)
         }
 
         IP++;
-        //StackDump(cpu->value_stack);
     }
 
     #undef ASM_CMD
@@ -149,14 +151,18 @@ static asm_arg next_parameter(proc_state* cpu)
     };
 }
 
-#undef CMD
-#undef REGS
-#undef STACK
-#undef CALL_STACK
-#undef RAM
-#undef IP
-#undef PUSH
-#undef POP
-#undef NEXT_ARG
-#undef STOP
-#undef ASSERT
+static void refresh_screen(const proc_state* cpu)
+{
+    puts("\033[H\033[2J");
+    for (int i = 0; i < SCREEN_HEIGHT; i++)
+    {
+        for (int j = 0; j < SCREEN_WIDTH; j++)
+        {
+            if (RAM[i*SCREEN_WIDTH + j])
+                putc('#', stdout);
+            else
+                putc('.', stdout);
+        }
+        putc('\n', stdout);
+    }
+}
