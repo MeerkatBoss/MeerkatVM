@@ -13,11 +13,7 @@
 #define VCPU_UTILS_H
 
 #include "int_stack.h"
-
-const int REG_COUNT = 6;
-const int MEM_SIZE  = 1 << 16;
-const int SCREEN_WIDTH  = 100;
-const int SCREEN_HEIGHT = 40;
+#include "assembler.h"
 
 struct proc_state
 {

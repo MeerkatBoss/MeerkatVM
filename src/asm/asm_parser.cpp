@@ -225,7 +225,43 @@ static int asm_parse_line(const char* line, assembly_state* state)
 /* TODO: definition support */
 static int asm_parse_def(const char* str, assembly_state* state)
 {
-    return -1;
+    static const int BUFFER_SIZE = 256;
+    static char BUFFER[BUFFER_SIZE] = "";
+
+    int value = 0;
+    int n_read = 0;
+
+    int success = sscanf(str, " %%def %s %d%n", BUFFER, &value, &n_read);
+
+    LOG_ASSERT_ERROR(success == 2, 
+        { STATE |= ASM_WDEF; return -1;},
+        "{%zu} Malformed constant definition",
+        LINE_NUM + 1);
+    LOG_ASSERT_ERROR(strempty(BUFFER + n_read), 
+        { STATE |= ASM_WDEF; return -1;},
+        "{%zu} Malformed constant definition",
+        LINE_NUM + 1);
+    LOG_ASSERT_ERROR(check_name(BUFFER),
+        { STATE |= ASM_NAME; return -1;},
+        "{%zu} '%s' is not a valid constant name",
+        LINE_NUM + 1, BUFFER);
+    LOG_ASSERT_ERROR(find_def(BUFFER, state) == NULL,
+        {STATE |= ASM_REDEF; return -1;},
+        "{%zu} Constant redefinition: '%s'",
+        LINE_NUM + 1, BUFFER);
+    LOG_ASSERT_ERROR(find_label(BUFFER, state) == NULL,
+        {STATE |= ASM_REDEF; return -1;},
+        "{%zu} Label '%s' redefinition",
+        LINE_NUM + 1, BUFFER);
+    LOG_ASSERT_ERROR(DEF_CNT < MAX_LABELS,
+        {STATE |= ASM_DEFOVF; return -1;},
+        "Maximum number of defined constants exceeded", NULL);
+    
+    strcpy(DEFS[DEF_CNT].name, BUFFER);
+    DEFS[DEF_CNT].value = value;
+    DEF_CNT++;
+
+    return 0;
 }
 
 static int asm_parse_code(const char* str, assembly_state* state)
@@ -236,7 +272,6 @@ static int asm_parse_code(const char* str, assembly_state* state)
     if (sep_ptr != NULL)
     {
         sscanf(str, " %[^:]", BUFFER);
-        size_t label_len = strlen(BUFFER);
 
         int label_parsed = asm_parse_label(BUFFER, state);
         LOG_ASSERT(label_parsed != -1, return -1);
@@ -261,11 +296,11 @@ static int asm_parse_code(const char* str, assembly_state* state)
 static int asm_parse_label(const char* str, assembly_state* state)
 {
     LOG_ASSERT_ERROR(check_name(str),
-        {STATE = ASM_NAME; return -1;},
+        {STATE |= ASM_NAME; return -1;},
         "{%zu} '%s' is not a valid label name",
         LINE_NUM + 1, str);
     LOG_ASSERT_ERROR(find_def(str, state) == NULL,
-        {STATE = ASM_REDEF; return -1;},
+        {STATE |= ASM_REDEF; return -1;},
         "{%zu} Ambiguous label definition: '%s'.",
         LINE_NUM + 1, str);
     
@@ -273,7 +308,7 @@ static int asm_parse_label(const char* str, assembly_state* state)
     if (old_label != NULL)
     {
         LOG_ASSERT_ERROR(old_label->addr == ADDR_UNSET,
-            {STATE = ASM_REDEF; return -1;},
+            {STATE |= ASM_REDEF; return -1;},
             "{%zu} Label '%s' redefinition.",
             LINE_NUM + 1, str);
         old_label->addr = (long) IP;
@@ -302,7 +337,7 @@ static int asm_parse_command(const char* str, assembly_state* state)
         } else
 
     #include "asm_cmd.h"
-    /* else */  LOG_ASSERT_ERROR(0, {STATE = ASM_UNCMD; return -1;}, 
+    /* else */  LOG_ASSERT_ERROR(0, {STATE |= ASM_UNCMD; return -1;}, 
                         "{%zu}: Unknown command '%s'",
                         LINE_NUM + 1, buffer);
 
@@ -322,7 +357,7 @@ static int asm_parse_arg_list(const char* str, cmd_args args, assembly_state* st
         int n_read = 0;
         
         int read = sscanf(str, "%s%n", BUFFER, &n_read);
-        LOG_ASSERT_ERROR(read == 1, {STATE = ASM_ARGCNT; return -1;},
+        LOG_ASSERT_ERROR(read == 1, {STATE |= ASM_ARGCNT; return -1;},
             "{%zu} Invalid number of arguments: %zu expected, but %zu found",
             LINE_NUM + 1, args.arg_count, i);
         str += n_read;
@@ -347,14 +382,14 @@ static int asm_parse_arg_list(const char* str, cmd_args args, assembly_state* st
         }
 
         LOG_ASSERT_ERROR((perms & args.arg_list[i].perms) == args.arg_list[i].perms,
-            {STATE = ASM_TYPE; return -1;},
+            {STATE |= ASM_TYPE; return -1;},
             "{%zu} Argument '%s': invalid argument type",
             LINE_NUM + 1, BUFFER);
         
         *command |= (signed) flags;
     }
 
-    LOG_ASSERT_ERROR(strempty(str), {STATE = ASM_ARGCNT; return -1;},
+    LOG_ASSERT_ERROR(strempty(str), {STATE |= ASM_ARGCNT; return -1;},
         "{%zu} Too many arguments given", LINE_NUM + 1);
 
     return 0;
@@ -367,7 +402,7 @@ static int asm_parse_arg(char* str, assembly_state* state, unsigned* flags)
     if (*str == '[')   /* Memory access */
     {
         LOG_ASSERT_ERROR(str[char_cnt - 1] == ']',
-            {STATE = ASM_INVAL; return -1;},
+            {STATE |= ASM_INVAL; return -1;},
             "{%zu} Malformed memory access argument: '%s'",
             LINE_NUM + 1, str);
         
@@ -396,24 +431,24 @@ static int asm_parse_sum_arg(char* str, assembly_state* state, unsigned* flags)
     *flags |= flags1 | flags2;
     
     LOG_ASSERT_ERROR(arg1 != -1,
-        {STATE = ASM_INVAL; return -1;},
+        {STATE |= ASM_INVAL; return -1;},
         "{%zu} Could not parse literal: '%s'",
         LINE_NUM + 1, argstr1);
 
     LOG_ASSERT_ERROR(arg2 != -1,
-        {STATE = ASM_INVAL; return -1;},
+        {STATE |= ASM_INVAL; return -1;},
         "{%zu} Could not parse literal: '%s'",
         LINE_NUM + 1, argstr2);
 
     unsigned sum_flags = (*flags) & (AF_NUM | AF_REG);
 
     LOG_ASSERT_ERROR(flags1 != 0 && flags2 != 0,
-        {STATE = ASM_INVAL; return -1;},
+        {STATE |= ASM_INVAL; return -1;},
         "{%zu} Sum containing label is not a valid argument.",
         LINE_NUM + 1);
 
     LOG_ASSERT_ERROR(sum_flags != AF_REG,
-        {STATE = ASM_INVAL; return -1;},
+        {STATE |= ASM_INVAL; return -1;},
         "{%zu} Sum of registers is not a valid argument.",
         LINE_NUM + 1);
 
@@ -505,7 +540,7 @@ static int asm_parse_name  (const char* str, assembly_state* state, int *value, 
     add_label(str, ADDR_UNSET, state);
 
     LOG_ASSERT_ERROR(FX_CNT < MAX_FIXUPS,
-        {STATE = ASM_FIXOVF; return -1;},
+        {STATE |= ASM_FIXOVF; return -1;},
         "Maximum number of fixups exceeded", NULL);
     
     FIXUP[FX_CNT++] = {
@@ -541,7 +576,7 @@ static int run_fixup (assembly_state* state)
         size_t label_num = FIXUP[i].label_number;
         size_t addr      = FIXUP[i].addr;
         LOG_ASSERT_ERROR(LABELS[label_num].addr != ADDR_UNSET,
-            {STATE = ASM_NDEF; return -1;},
+            {STATE |= ASM_NDEF; return -1;},
             "Label '%s' was not defined",
             LABELS[label_num].name);
 
@@ -553,7 +588,7 @@ static int run_fixup (assembly_state* state)
 static int add_label(const char* name, long addr, assembly_state* state)
 {
     LOG_ASSERT_ERROR(LB_CNT < MAX_LABELS,
-        {STATE = ASM_LABELOVF; return -1;},
+        {STATE |= ASM_LABELOVF; return -1;},
         "Maximum number of labels exceeded", NULL);
     strcpy(LABELS[LB_CNT].name, name);
     LABELS[LB_CNT].addr = addr;

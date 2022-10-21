@@ -19,7 +19,7 @@
  * @brief 
  * Asssembly result description
  */
-enum assembly_result
+enum assembly_result : unsigned
 {
     ASM_SUCCESS     = 00000,
     ASM_UNCMD       = 00001,
@@ -29,11 +29,12 @@ enum assembly_result
     ASM_REDEF       = 00020,
     ASM_NAME        = 00040,
     ASM_NDEF        = 00100,
+    ASM_WDEF        = 00200,
     ASM_SYNTAX      = ASM_UNCMD | ASM_ARGCNT | ASM_INVAL | ASM_TYPE
                     | ASM_REDEF | ASM_NAME   | ASM_NDEF,
-    ASM_LABELOVF    = 00200,
-    ASM_DEFOVF      = 00400,
-    ASM_FIXOVF      = 01000
+    ASM_LABELOVF    = 00400,
+    ASM_DEFOVF      = 01000,
+    ASM_FIXOVF      = 02000
 };
 
 /**
@@ -103,7 +104,7 @@ struct assembly_state
     size_t          def_cnt;        /*<! number of created constant definitions */
     fixup*          fixups;         /*<! array of label fixups */
     size_t          fix_cnt;        /*<! number of created label fixups */
-    assembly_result result;         /*<! assembly result */
+    unsigned        result;         /*<! assembly result */
 };
 
 /**

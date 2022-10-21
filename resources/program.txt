@@ -1,26 +1,32 @@
-		push 400
+		%def vbuf_start 400
+		%def radius 30
+
+		push vbuf_start
 		pop vbp			; clear screen
 
 		push 0
 		pop rax			; rax = 0
 
+		push radius
+		pop rcx			; rcx = radius
+
 row_loop_start:	push rax
-		push 40
-		jge row_loop_end	; if (rax >= 40) break
+		push .sc_height
+		jge row_loop_end	; if (rax >= screen_height) break
 
 		push 0
 		pop rbx			; rbx = 0
 
 col_loop_start:	push rbx
-		push 100
-		jge col_loop_end	; if (rbx >= 100) break
+		push .sc_width
+		jge col_loop_end	; if (rbx >= screen_width) break
 
 		push rax
-		push 100
+		push .sc_width
 		mul
 		push rbx
 		add
-		pop rdx			; rdx = 100*rax + rbx
+		pop rdx			; rdx = screen_width*rax + rbx
 
 		call on_circle
 
@@ -45,33 +51,38 @@ row_loop_end:	push 0
 
 
 
+		%def y0 20
+		%def x0 50
+		%def y_coeff 11
+		%def x_coeff 3
+
 on_circle:	push rax
-		push 20
+		push y0
 		sub
 		push rax
-		push 20
+		push y0
 		sub
-		mul			; y^2
-		push 11
-		mul			; 11y^2
+		mul			; (y-y0)^2
+		push y_coeff
+		mul			; b(y-y0)^2
 
 		push rbx
-		push 50
+		push x0
 		sub
 		push rbx
-		push 50
+		push x0
 		sub
-		mul			; x^2
-		push 3			; 3x^2
+		mul			; (x-x0)^2
+		push 3			; a(x-x0)^2
 		mul
 
-		add			; 3x^2 + 11y^2
+		add			; a(x-x0)^2 + b(y-y0)^2
 
-		push 30
+		push rcx
 		dup
 		mul
-		push 3
-		mul			; 3 * 30^2
+		push x_coeff
+		mul			; ar^2
 		jle c_true
 
 		push 0			; 3x^2 + 11y^2 > 3 * 30^2

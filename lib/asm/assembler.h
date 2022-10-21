@@ -36,6 +36,11 @@ enum asm_reg : unsigned
 
 const size_t ARG_MAX = 1;
 
+const int REG_COUNT = 6;
+const int MEM_SIZE  = 1 << 16;
+const int SCREEN_WIDTH  = 100;
+const int SCREEN_HEIGHT = 40;
+
 /**
  * @brief 
  * Permissions required for CPU command's formal argument

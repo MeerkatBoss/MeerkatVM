@@ -7,6 +7,8 @@
 #include "logger.h"
 #include "asm_utils.h"
 
+static void add_def(const char* name, int value, assembly_state* state);
+
 assembly_state* assembly_state_ctor(const char* filename)
 {
     TextLines text_lines = read_file(filename);
@@ -37,6 +39,9 @@ assembly_state* assembly_state_ctor(const char* filename)
         .fix_cnt     = 0,
         .result      = ASM_SUCCESS
     };
+
+    add_def(".sc_width", SCREEN_WIDTH, result);
+    add_def(".sc_height", SCREEN_HEIGHT, result);
      
     return result;
 }
@@ -115,4 +120,11 @@ int strempty(const char* str)
 {
     while(isspace(*str)) str++;
     return !*str;
+}
+
+static void add_def(const char* name, int value, assembly_state* state)
+{
+    strcpy(state->definitions[state->def_cnt].name, name);
+    state->definitions[state->def_cnt].value = value;
+    state->def_cnt++;
 }
