@@ -101,7 +101,7 @@ const char STR_SIGN[5] = SIGNATURE;
  * @brief 
  * Latest command-set version
  */
-const unsigned int LATEST_VERSION = 4;
+const unsigned int LATEST_VERSION = 5;
 
 /**
  * @brief 

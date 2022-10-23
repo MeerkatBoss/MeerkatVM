@@ -1,94 +1,133 @@
-[0x0000]                       |			%def vbuf_start 400
-[0x0000]                       |			%def radius 30
-[0x0000]                       |	
-[0x0000] 27 190                |			push vbuf_start
-[0x0002] 48 05                 |			pop vbp			; clear screen
-[0x0004]                       |	
-[0x0004] 27 00                 |			push 0
-[0x0006] 48 01                 |			pop rax			; rax = 0
-[0x0008]                       |	
-[0x0008] 27 1e                 |			push radius
-[0x000a] 48 03                 |			pop rcx			; rcx = radius
-[0x000c]                       |	
-[0x000c] 47 01                 |	row_loop_start:	push rax
-[0x000e] 27 28                 |			push .sc_height
-[0x0010] 10 38                 |			jge row_loop_end	; if (rax >= screen_height) break
-[0x0012]                       |	
-[0x0012] 27 00                 |			push 0
-[0x0014] 48 02                 |			pop rbx			; rbx = 0
+[0x0000] 15                    |			get
+[0x0001] 15                    |			get
+[0x0002] 15                    |			get			; stack = [a b c]
+[0x0003]                       |	
+[0x0003] 48 03                 |			pop rcx			; rcx = c
+[0x0005] 48 02                 |			pop rbx			; rbx = b
+[0x0007] 48 04                 |			pop rdx			; rdx = a
+[0x0009]                       |	
+[0x0009] 47 02                 |			push rbx
+[0x000b] 47 02                 |			push rbx
+[0x000d] 05                    |			mul			; b^2
+[0x000e]                       |			
+[0x000e] 27 04                 |			push 4
+[0x0010] 47 04                 |			push rdx
+[0x0012] 47 03                 |			push rcx
+[0x0014] 05                    |			mul
+[0x0015] 05                    |			mul			; 4ac
 [0x0016]                       |	
-[0x0016] 47 02                 |	col_loop_start:	push rbx
-[0x0018] 27 64                 |			push .sc_width
-[0x001a] 10 31                 |			jge col_loop_end	; if (rbx >= screen_width) break
+[0x0016] 03                    |			sub			; D = b^2 - 4ac
+[0x0017]                       |			
+[0x0017] 14                    |			dup
+[0x0018] 27 00                 |			push 0
+[0x001a] 10 20                 |			jge d_not_neg		; D < 0
 [0x001c]                       |	
-[0x001c] 47 01                 |			push rax
-[0x001e] 27 64                 |			push .sc_width
-[0x0020] 05                    |			mul
-[0x0021] 47 02                 |			push rbx
-[0x0023] 01                    |			add
-[0x0024] 48 04                 |			pop rdx			; rdx = screen_width*rax + rbx
-[0x0026]                       |	
-[0x0026] 12 3d                 |			call on_circle
-[0x0028]                       |	
-[0x0028] c8 04                 |			pop [rdx]
+[0x001c] 27 fff0bdc1           |			push -999999		; No roots
+[0x001e] 09                    |			out
+[0x001f] 0a                    |			halt
+[0x0020]                       |	
+[0x0020] 14                    |	d_not_neg:	dup
+[0x0021] 27 00                 |			push 0
+[0x0023] 0c 35                 |			jg d_pos		; D == 0
+[0x0025]                       |	
+[0x0025] 47 02                 |			push rbx		; Single root
+[0x0027] 27 ffffffff           |			push -1
+[0x0029] 05                    |			mul			; -b
 [0x002a]                       |	
-[0x002a] 47 02                 |			push rbx
-[0x002c] 02                    |			inc
-[0x002d] 48 02                 |			pop rbx			; increment column number
-[0x002f]                       |			
-[0x002f] 0b 16                 |			jmp col_loop_start
-[0x0031]                       |	
-[0x0031] 47 01                 |	col_loop_end:	push rax
-[0x0033] 02                    |			inc
-[0x0034] 48 01                 |			pop rax			; increment row number
-[0x0036]                       |			
-[0x0036] 0b 0c                 |			jmp row_loop_start
-[0x0038]                       |	
-[0x0038] 27 00                 |	row_loop_end:	push 0
-[0x003a] 48 05                 |			pop vbp			; display buffer
-[0x003c]                       |	
-[0x003c] 0a                    |			halt
-[0x003d]                       |	
-[0x003d]                       |	
-[0x003d]                       |	
-[0x003d]                       |			%def y0 20
-[0x003d]                       |			%def x0 50
-[0x003d]                       |			%def y_coeff 11
-[0x003d]                       |			%def x_coeff 3
-[0x003d]                       |	
-[0x003d] 47 01                 |	on_circle:	push rax
-[0x003f] 27 14                 |			push y0
-[0x0041] 03                    |			sub
-[0x0042] 47 01                 |			push rax
-[0x0044] 27 14                 |			push y0
-[0x0046] 03                    |			sub
-[0x0047] 05                    |			mul			; (y-y0)^2
-[0x0048] 27 0b                 |			push y_coeff
-[0x004a] 05                    |			mul			; b(y-y0)^2
-[0x004b]                       |	
-[0x004b] 47 02                 |			push rbx
-[0x004d] 27 32                 |			push x0
-[0x004f] 03                    |			sub
-[0x0050] 47 02                 |			push rbx
-[0x0052] 27 32                 |			push x0
-[0x0054] 03                    |			sub
-[0x0055] 05                    |			mul			; (x-x0)^2
-[0x0056] 27 03                 |			push 3			; a(x-x0)^2
-[0x0058] 05                    |			mul
-[0x0059]                       |	
-[0x0059] 01                    |			add			; a(x-x0)^2 + b(y-y0)^2
-[0x005a]                       |	
-[0x005a] 47 03                 |			push rcx
-[0x005c] 14                    |			dup
-[0x005d] 05                    |			mul
-[0x005e] 27 03                 |			push x_coeff
-[0x0060] 05                    |			mul			; ar^2
-[0x0061] 11 66                 |			jle c_true
-[0x0063]                       |	
-[0x0063] 27 00                 |			push 0			; a(x-x0)^2 + b(y-y0)^2 > ar^2
-[0x0065] 13                    |			ret
-[0x0066]                       |		
-[0x0066] 27 01                 |		c_true:	push 1			; a(x-x0)^2 + b(y-y0)^2 <= ar^2
-[0x0068] 13                    |			ret
-[0x0069]                       |	
-[0x0069]                       |	
+[0x002a] 27 64                 |			push 100
+[0x002c] 05                    |			mul			; -100b
+[0x002d]                       |			
+[0x002d] 47 04                 |			push rdx
+[0x002f] 27 02                 |			push 2
+[0x0031] 05                    |			mul			; 2a
+[0x0032] 06                    |			div			; -100b/2a
+[0x0033]                       |			
+[0x0033] 09                    |			out
+[0x0034] 0a                    |			halt
+[0x0035]                       |	
+[0x0035] 48 01                 |	d_pos:		pop rax			; rax = D
+[0x0037] 12 60                 |			call sqrt
+[0x0039]                       |	
+[0x0039] 47 02                 |			push rbx
+[0x003b] 27 ffffffff           |			push -1
+[0x003d] 05                    |			mul
+[0x003e] 48 02                 |			pop rbx			; rbx = -b
+[0x0040]                       |	
+[0x0040] 47 04                 |			push rdx
+[0x0042] 27 02                 |			push 2
+[0x0044] 05                    |			mul
+[0x0045] 48 04                 |			pop rdx			; rdx = 2a
+[0x0047]                       |	
+[0x0047] 47 02                 |			push rbx		; First root
+[0x0049] 47 01                 |			push rax
+[0x004b] 03                    |			sub
+[0x004c]                       |	
+[0x004c] 27 64                 |			push 100
+[0x004e] 05                    |			mul			; 100(-b-D)
+[0x004f]                       |	
+[0x004f] 47 04                 |			push rdx
+[0x0051] 06                    |			div			; (-b - D)/2a
+[0x0052] 09                    |			out
+[0x0053]                       |	
+[0x0053] 47 02                 |			push rbx		; Second root
+[0x0055] 47 01                 |			push rax
+[0x0057] 01                    |			add
+[0x0058]                       |	
+[0x0058] 27 64                 |			push 100
+[0x005a] 05                    |			mul			; 100(-b+D)
+[0x005b]                       |	
+[0x005b] 47 04                 |			push rdx
+[0x005d] 06                    |			div			; (-b + D)/2a
+[0x005e] 09                    |			out
+[0x005f]                       |	
+[0x005f] 0a                    |			halt
+[0x0060]                       |	
+[0x0060]                       |	
+[0x0060]                       |	
+[0x0060]                       |	; calculate square root of rax, store it in rax
+[0x0060]                       |			%def sq_min 0
+[0x0060]                       |			%def sq_max 10000
+[0x0060]                       |	
+[0x0060] 47 02                 |	sqrt:		push rbx		; save register values
+[0x0062] 47 04                 |			push rdx
+[0x0064]                       |	
+[0x0064] 27 00                 |			push sq_min
+[0x0066] 48 02                 |			pop rbx			; rbx = sq_min
+[0x0068] 27 2710               |			push sq_max
+[0x006a] 48 04                 |			pop rdx			; rdx = sq_max
+[0x006c]                       |	
+[0x006c] 47 04                 |	sq_loop_start:	push rdx
+[0x006e] 47 02                 |			push rbx
+[0x0070] 03                    |			sub
+[0x0071] 27 01                 |			push 1
+[0x0073] 11 8c                 |			jle sq_loop_end		; if (rdx - rbx <= 1) break;
+[0x0075]                       |	
+[0x0075] 47 02                 |			push rbx
+[0x0077] 47 04                 |			push rdx
+[0x0079] 01                    |			add
+[0x007a] 27 02                 |			push 2
+[0x007c] 06                    |			div			; m = (rbx + rdx)/2
+[0x007d]                       |	
+[0x007d] 14                    |			dup
+[0x007e] 14                    |			dup
+[0x007f] 05                    |			mul			; m^2
+[0x0080]                       |	
+[0x0080] 47 01                 |			push rax
+[0x0082] 0c 88                 |			jg sq_greater
+[0x0084]                       |	
+[0x0084] 48 02                 |			pop rbx			; if (m*m <= rax) rbx = m;
+[0x0086] 0b 6c                 |			jmp sq_loop_start
+[0x0088]                       |	
+[0x0088] 48 04                 |	sq_greater:	pop rdx
+[0x008a] 0b 6c                 |			jmp sq_loop_start	; else rdx = m;
+[0x008c]                       |	
+[0x008c] 47 02                 |	sq_loop_end:	push rbx
+[0x008e] 48 01                 |			pop rax			; rax = rbx
+[0x0090]                       |	
+[0x0090] 48 04                 |			pop rdx
+[0x0092] 48 02                 |			pop rbx			; restore register values
+[0x0094]                       |	
+[0x0094] 13                    |			ret
+[0x0095]                       |			
+[0x0095]                       |	
+[0x0095]                       |	

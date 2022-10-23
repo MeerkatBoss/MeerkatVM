@@ -1,6 +1,4 @@
-		%def x 5
-
-		push x
+		get
 		pop rax
 
 		call factorial

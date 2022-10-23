@@ -126,5 +126,13 @@ ASM_CMD(DUP, 0x14, {},
     PUSH(tmp);
 })
 
+ASM_CMD(GET, 0x15, {},
+{
+    int val = 0;
+    int success = scanf("%d", &val);
+    ASSERT(success == 1, "Failed to read number");
+    PUSH(val);
+})
+
 
 #undef _

@@ -1,0 +1,132 @@
+		get
+		get
+		get			; stack = [a b c]
+
+		pop rcx			; rcx = c
+		pop rbx			; rbx = b
+		pop rdx			; rdx = a
+
+		push rbx
+		push rbx
+		mul			; b^2
+		
+		push 4
+		push rdx
+		push rcx
+		mul
+		mul			; 4ac
+
+		sub			; D = b^2 - 4ac
+		
+		dup
+		push 0
+		jge d_not_neg		; D < 0
+
+		push -999999		; No roots
+		out
+		halt
+
+d_not_neg:	dup
+		push 0
+		jg d_pos		; D == 0
+
+		push rbx		; Single root
+		push -1
+		mul			; -b
+
+		push 100
+		mul			; -100b
+		
+		push rdx
+		push 2
+		mul			; 2a
+		div			; -100b/2a
+		
+		out
+		halt
+
+d_pos:		pop rax			; rax = D
+		call sqrt
+
+		push rbx
+		push -1
+		mul
+		pop rbx			; rbx = -b
+
+		push rdx
+		push 2
+		mul
+		pop rdx			; rdx = 2a
+
+		push rbx		; First root
+		push rax
+		sub
+
+		push 100
+		mul			; 100(-b-D)
+
+		push rdx
+		div			; (-b - D)/2a
+		out
+
+		push rbx		; Second root
+		push rax
+		add
+
+		push 100
+		mul			; 100(-b+D)
+
+		push rdx
+		div			; (-b + D)/2a
+		out
+
+		halt
+
+
+
+; calculate square root of rax, store it in rax
+		%def sq_min 0
+		%def sq_max 10000
+
+sqrt:		push rbx		; save register values
+		push rdx
+
+		push sq_min
+		pop rbx			; rbx = sq_min
+		push sq_max
+		pop rdx			; rdx = sq_max
+
+sq_loop_start:	push rdx
+		push rbx
+		sub
+		push 1
+		jle sq_loop_end		; if (rdx - rbx <= 1) break;
+
+		push rbx
+		push rdx
+		add
+		push 2
+		div			; m = (rbx + rdx)/2
+
+		dup
+		dup
+		mul			; m^2
+
+		push rax
+		jg sq_greater
+
+		pop rbx			; if (m*m <= rax) rbx = m;
+		jmp sq_loop_start
+
+sq_greater:	pop rdx
+		jmp sq_loop_start	; else rdx = m;
+
+sq_loop_end:	push rbx
+		pop rax			; rax = rbx
+
+		pop rdx
+		pop rbx			; restore register values
+
+		ret
+		
+
