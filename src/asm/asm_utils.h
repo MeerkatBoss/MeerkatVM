@@ -50,7 +50,7 @@ const size_t MAX_LABEL_LEN = 32;
 struct asm_label
 {
     char name[MAX_LABEL_LEN + 1];
-    long addr;
+    int  addr;
 };
 
 /**
@@ -60,7 +60,7 @@ struct asm_label
 struct fixup
 {
     size_t label_number;
-    size_t addr;
+    int    addr;
 };
 
 /**
@@ -70,7 +70,7 @@ struct fixup
 struct asm_def
 {
     char name[MAX_LABEL_LEN + 1];
-    int value;
+    int  value;
 };
 
 /**
@@ -96,7 +96,7 @@ struct assembly_state
     size_t          line_num;       /*<! number of line being processed */
     size_t*         line_addr;      /*<! IP, at which code for given line starts */
     size_t          ip;             /*<! instruction pointer*/
-    int*            cmd;            /*<! command array */
+    byte_t*         cmd;            /*<! command array */
     size_t          cmd_size;       /*<! length of command array*/
     asm_label*      labels;         /*<! array of labels */
     size_t          label_cnt;      /*<! number of created labels */

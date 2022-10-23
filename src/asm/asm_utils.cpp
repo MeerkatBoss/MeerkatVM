@@ -20,7 +20,8 @@ assembly_state* assembly_state_ctor(const char* filename)
         "Could not read file \'%s\'", filename);
 
     assembly_state *result = (assembly_state*) calloc(1, sizeof(*result));
-    size_t cmd_len = text_lines.line_count * (2*MAX_CMD_ARGS + 1);
+    size_t cmd_len = text_lines.line_count
+                        * (MAX_CMD_ARGS*sizeof(int) + 2*sizeof(char));
 
     *result = {
         .header      = {},
@@ -29,7 +30,7 @@ assembly_state* assembly_state_ctor(const char* filename)
         .line_addr   = (size_t*)calloc(text_lines.line_count,
                         sizeof(size_t)),
         .ip          = 0,
-        .cmd         = (int*) calloc(cmd_len, sizeof(int)),
+        .cmd         = (byte_t*) calloc(cmd_len, sizeof(char)),
         .cmd_size    = cmd_len,
         .labels      = (asm_label*) calloc(MAX_LABELS, sizeof(asm_label)),
         .label_cnt   = 0,

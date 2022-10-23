@@ -1,0 +1,13 @@
+		push 12+4
+		pop rax
+
+		get
+		pop [rax+1]
+		get
+		pop [2+rax]
+
+		push [1+rax]
+		push [rax+2]
+		add
+		out
+		halt

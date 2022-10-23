@@ -14,13 +14,15 @@
 
 #include <stddef.h>
 
+typedef unsigned char byte_t;
+
 #define ASM_CMD(name, num, ...) CMD_##name=num,
 
 /**
  * @brief 
  * Byte-codes of virtual CPU instructions
  */
-enum cpu_command : unsigned
+enum cpu_command : byte_t
 {
     #include "asm_cmd.h"
 };
@@ -28,7 +30,7 @@ enum cpu_command : unsigned
 #undef ASM_CMD
 
 #define ASM_REG(name, num, ...) REG_##name = num,
-enum asm_reg : unsigned
+enum asm_reg : byte_t
 {
     #include "asm_reg.h"
 };
@@ -45,7 +47,7 @@ const int SCREEN_HEIGHT = 40;
  * @brief 
  * Permissions required for CPU command's formal argument
  */
-enum arg_perms : unsigned
+enum arg_perms : byte_t
 {
     ARG_RD      = 01,
     ARG_WR      = 02,
@@ -53,7 +55,7 @@ enum arg_perms : unsigned
     ARG_LABEL   = 04
 };
 
-enum arg_flags : unsigned
+enum arg_flags : byte_t
 {
     AF_LAB  = 0x00,
     AF_NUM  = 0x20,
@@ -101,7 +103,7 @@ const char STR_SIGN[5] = SIGNATURE;
  * @brief 
  * Latest command-set version
  */
-const unsigned int LATEST_VERSION = 5;
+const unsigned int LATEST_VERSION = 6;
 
 /**
  * @brief 
