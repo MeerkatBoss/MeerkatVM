@@ -31,7 +31,7 @@ proc_state proc_ctor(const char* program_file)
         .program_length = hdr->header.opcnt,
         .mapping_size   = file_size,
         .registers      = {0, 0, 0, 0, 0},
-        .cmd            = (int*)(bytes + HEADER_SIZE),
+        .cmd            = (byte_t*)(bytes + HEADER_SIZE),
         .value_stack    = value_stack,
         .call_stack     = call_stack,
         .memory         = (int*) calloc(MEM_SIZE, sizeof(int))
@@ -79,7 +79,7 @@ int proc_run(proc_state *cpu)
 
     while ((size_t)IP < cpu->program_length)
     {
-        switch ((unsigned)CMD[IP] & cmd_mask)
+        switch ((unsigned)CMD[IP++] & cmd_mask)
         {
         #include "asm_cmd.h"
         
@@ -88,8 +88,6 @@ int proc_run(proc_state *cpu)
                 "Failed to execute command '%x' at [%x]", CMD[IP], IP);
             break;
         }
-
-        IP++;
     }
 
     #undef ASM_CMD
@@ -103,11 +101,12 @@ static asm_arg next_parameter(proc_state* cpu)
     static int argument = 0;
     const unsigned flag_mask = 0xe0;
 
-    unsigned flags = (unsigned)CMD[IP] & flag_mask;
+    byte_t flags = CMD[IP-1] & flag_mask;
 
     if (flags == AF_LAB)
     {
-        argument = CMD[++IP];
+        memcpy(&argument, (int*)(CMD + IP), sizeof(int));
+        IP += sizeof(int);
         return {
             .val_ptr = &argument,
             .perms   = ARG_LABEL
@@ -118,14 +117,15 @@ static asm_arg next_parameter(proc_state* cpu)
 
     if (flags & AF_REG)
     {
-        int reg_num = CMD[++IP];
+        byte_t reg_num = CMD[IP++];
         LOG_ASSERT_ERROR(reg_num < REG_COUNT, return {},
             "Invalid register number at 0x%*x", sizeof(IP)*2, IP);
         val_ptr = &REGS[reg_num];
     }
     if (flags & AF_NUM)
     {
-        argument = CMD[++IP];
+        memcpy(&argument, (int*)(CMD + IP), sizeof(int));
+        IP += sizeof(int);
 
         if (val_ptr != &argument)
         {

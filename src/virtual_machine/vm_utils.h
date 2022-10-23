@@ -20,7 +20,7 @@ struct proc_state
     size_t  program_length;
     size_t  mapping_size;
     int     registers[REG_COUNT];
-    int*    cmd;
+    byte_t* cmd;
     Stack*  value_stack;
     Stack*  call_stack;
     int     *memory;

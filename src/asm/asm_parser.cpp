@@ -585,7 +585,7 @@ static int run_fixup (assembly_state* state)
     for (size_t i = 0; i < FX_CNT; i++)
     {
         size_t label_num = FIXUP[i].label_number;
-        size_t addr      = FIXUP[i].addr;
+        int addr      = FIXUP[i].addr;
         LOG_ASSERT_ERROR(LABELS[label_num].addr != ADDR_UNSET,
             {STATE |= ASM_NDEF; return -1;},
             "Label '%s' was not defined",

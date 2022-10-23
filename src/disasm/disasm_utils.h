@@ -1,5 +1,6 @@
 #ifndef DISASM_UTILS_H
 #define DISASM_UTILS_H
+#include "assembler.h"
 
 const int MAX_LABELS = 256;
 
@@ -7,7 +8,7 @@ struct disasm_state
 {
     size_t  program_length;
     size_t  mapping_size;
-    int*    cmd;
+    byte_t* cmd;
     size_t  cmd_size;
     size_t  ip;
     long*   labels;

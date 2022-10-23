@@ -25,7 +25,7 @@ disasm_state* disasm_ctor(const char* filename)
     *result =  {
         .program_length = hdr->header.opcnt,
         .mapping_size   = file_size,
-        .cmd            = (int*)(bytes + HEADER_SIZE),
+        .cmd            = (byte_t*)(bytes + HEADER_SIZE),
         .ip             = 0,
         .labels         = (long*) calloc(MAX_LABELS,
                                 sizeof(long)),
@@ -84,7 +84,8 @@ int disassemble(const char* output_file, disasm_state* state)
         #undef ASM_CMD
         if (arg_cnt)
         {
-            unsigned arg_flags = state->cmd[state->ip - 1] & ~cmd_mask;
+            byte_t arg_flags = state->cmd[state->ip - 1] & ~cmd_mask;
+
             if (arg_flags & AF_MEM) fputc('[', output);
             if (arg_flags & AF_REG)
             {
@@ -104,12 +105,19 @@ int disassemble(const char* output_file, disasm_state* state)
                     fputc('+', output);
             }
             if (arg_flags & AF_NUM)
-                fprintf(output, "%d", state->cmd[state->ip++]);
+            {
+                int num = 0;
+                memcpy(&num, (int*)(state->cmd + state->ip), sizeof(int));
+                fprintf(output, "%d", num);
+                state->ip += sizeof(int);
+            }
             if (arg_flags & AF_MEM) fputc(']', output);
 
             if (arg_flags == AF_LAB)
             {
-                long addr = state->cmd[state->ip++];
+                int addr = 0;
+                memcpy(&addr, (int*)(state->cmd + state->ip), sizeof(int));
+                state->ip += sizeof(int);
                 state->labels[state->label_cnt++] = addr;
                 fprintf(output, ".0x%08lx\t", (unsigned long) addr);
             }
