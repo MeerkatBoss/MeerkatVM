@@ -31,4 +31,6 @@ void proc_dtor(proc_state* cpu);
 
 int proc_run(proc_state *cpu);
 
+void proc_dump(proc_state* cpu);
+
 #endif

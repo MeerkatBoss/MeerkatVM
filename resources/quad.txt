@@ -6,7 +6,27 @@
 		pop rbx			; rbx = b
 		pop rdx			; rdx = a
 
-		push rbx
+		push rdx
+		push 0
+		jne a_non_zero
+		
+		push rcx
+		push 0
+		jne c_non_zero
+		
+		push 0 
+		dup
+		dup
+		out
+		out
+		out
+		halt
+
+c_non_zero:	push -999999
+		out
+		halt
+
+a_non_zero:	push rbx
 		push rbx
 		mul			; b^2
 		

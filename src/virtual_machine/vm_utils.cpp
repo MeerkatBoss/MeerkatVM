@@ -88,6 +88,8 @@ int proc_run(proc_state *cpu)
                 "Failed to execute command '%x' at [%x]", CMD[IP], IP);
             break;
         }
+
+        //proc_dump(cpu);
     }
 
     #undef ASM_CMD
@@ -165,4 +167,58 @@ static void refresh_screen(const proc_state* cpu)
         }
         putc('\n', stdout);
     }
+}
+
+void proc_dump(proc_state* cpu)
+{
+    static const unsigned dump_lines = 16;
+    static const unsigned dump_columns = 16;
+    static char STRBUF[2048] = "";
+    char *bufptr = STRBUF;
+    log_message(MSG_TRACE, "Dumping virtual machine state.");
+    log_message(MSG_TRACE, "Registers:");
+
+    #define ASM_REG(name, num) log_message(MSG_TRACE, "\t" #name "= %d", REGS[num]);
+    #include "asm_reg.h"
+    #undef ASM_REG
+
+    log_message(MSG_TRACE, "Memory:");
+    for (unsigned i = 0; i < dump_lines; i++)
+    {
+        int n_write = 0;
+        bufptr = STRBUF;
+        sprintf(bufptr, "[%04u]%n", i*dump_columns, &n_write);
+        bufptr+=n_write;
+
+        for (unsigned j = 0; j < dump_columns; j++)
+        {
+            sprintf(bufptr, " %04u%n", RAM[i*dump_columns + j], &n_write);
+            bufptr += n_write;
+        }
+        log_message(MSG_TRACE, "%s", STRBUF);
+    }
+
+    log_message(MSG_TRACE, "Commands:");
+    bufptr = STRBUF;
+    for (unsigned i = 0; i < dump_lines; i++)
+    {
+        int n_write = 0;
+        bufptr = STRBUF;
+        sprintf(bufptr, "[0x%04x] %n", i*dump_columns, &n_write);
+        bufptr += n_write;
+        
+        for (unsigned j = 0; j < dump_columns; j++)
+        {
+            if (IP == i*dump_columns + j)
+                sprintf(bufptr, "[0x%02hhx]%n", i*dump_columns + j, &n_write);
+            else
+                sprintf(bufptr, " 0x%02hhx %n", i*dump_columns + j, &n_write);
+            bufptr += n_write;
+        }
+        log_message(MSG_TRACE, "%s", STRBUF);
+    }
+    log_message(MSG_TRACE, "Data stack:");
+    StackDump(STACK);
+    log_message(MSG_TRACE, "Call stack:");
+    StackDump(CALL_STACK);
 }

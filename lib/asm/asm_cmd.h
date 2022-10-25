@@ -21,7 +21,7 @@
         ASSERT(ST_SIZE >= 2, "Cannot pop empty stack");\
         int op1 = POP _ op2 = POP;\
         asm_arg argument = NEXT_ARG;\
-        if (op2 cmp op1) IP = *argument.val_ptr - 1;\
+        if (op2 cmp op1) IP = *argument.val_ptr;\
     })
 
 ASM_CMD(NOP, 0x00, {.arg_count = 0 _ .arg_list = {}}, {})
@@ -95,7 +95,7 @@ ASM_CMD(HALT,0x0A, {.arg_count = 0 _ .arg_list = {}},
 ASM_CMD(JMP, 0x0B, {.arg_count = 1 _ .arg_list = {{.perms = ARG_LABEL}}},
 {
     asm_arg argument = NEXT_ARG;
-    IP = *argument.val_ptr - 1;
+    IP = *argument.val_ptr;
 })
 
 ASM_JMP(JG,  0x0C, >)
@@ -109,7 +109,7 @@ ASM_CMD(CALL,0x12, {.arg_count = 1 _ .arg_list = {{.perms = ARG_LABEL}}},
 {
     asm_arg argument = NEXT_ARG;
     PUSH_CALL;
-    IP = *argument.val_ptr - 1;
+    IP = *argument.val_ptr;
 })
 
 ASM_CMD(RET, 0x13, {},

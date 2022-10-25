@@ -1,13 +1,94 @@
-[0x0000] 27 10 00 00 00        |			push 12+4
-[0x0005] 48 01                 |			pop rax
+[0x0000]                       |			%def vbuf_start 400
+[0x0000]                       |			%def radius 30
+[0x0000]                       |	
+[0x0000] 27 90 01 00 00        |			push vbuf_start
+[0x0005] 48 05                 |			pop vbp			; clear screen
 [0x0007]                       |	
-[0x0007] 15                    |			get
-[0x0008] e8 01 01 00 00 00     |			pop [rax+1]
-[0x000e] 15                    |			get
-[0x000f] e8 01 02 00 00 00     |			pop [2+rax]
+[0x0007] 27 00 00 00 00        |			push 0
+[0x000c] 48 01                 |			pop rax			; rax = 0
+[0x000e]                       |	
+[0x000e] 27 1e 00 00 00        |			push radius
+[0x0013] 48 03                 |			pop rcx			; rcx = radius
 [0x0015]                       |	
-[0x0015] e7 01 01 00 00 00     |			push [1+rax]
-[0x001b] e7 01 02 00 00 00     |			push [rax+2]
-[0x0021] 01                    |			add
-[0x0022] 09                    |			out
-[0x0023] 0a                    |			halt
+[0x0015] 47 01                 |	row_loop_start:	push rax
+[0x0017] 27 28 00 00 00        |			push .sc_height
+[0x001c] 10 5c 00 00 00        |			jge row_loop_end	; if (rax >= screen_height) break
+[0x0021]                       |	
+[0x0021] 27 00 00 00 00        |			push 0
+[0x0026] 48 02                 |			pop rbx			; rbx = 0
+[0x0028]                       |	
+[0x0028] 47 02                 |	col_loop_start:	push rbx
+[0x002a] 27 64 00 00 00        |			push .sc_width
+[0x002f] 10 52 00 00 00        |			jge col_loop_end	; if (rbx >= screen_width) break
+[0x0034]                       |	
+[0x0034] 47 01                 |			push rax
+[0x0036] 27 64 00 00 00        |			push .sc_width
+[0x003b] 05                    |			mul
+[0x003c] 47 02                 |			push rbx
+[0x003e] 01                    |			add
+[0x003f] 48 04                 |			pop rdx			; rdx = screen_width*rax + rbx
+[0x0041]                       |	
+[0x0041] 12 64 00 00 00        |			call on_circle
+[0x0046]                       |	
+[0x0046] c8 04                 |			pop [rdx]
+[0x0048]                       |	
+[0x0048] 47 02                 |			push rbx
+[0x004a] 02                    |			inc
+[0x004b] 48 02                 |			pop rbx			; increment column number
+[0x004d]                       |			
+[0x004d] 0b 28 00 00 00        |			jmp col_loop_start
+[0x0052]                       |	
+[0x0052] 47 01                 |	col_loop_end:	push rax
+[0x0054] 02                    |			inc
+[0x0055] 48 01                 |			pop rax			; increment row number
+[0x0057]                       |			
+[0x0057] 0b 15 00 00 00        |			jmp row_loop_start
+[0x005c]                       |	
+[0x005c] 27 00 00 00 00        |	row_loop_end:	push 0
+[0x0061] 48 05                 |			pop vbp			; display buffer
+[0x0063]                       |	
+[0x0063] 0a                    |			halt
+[0x0064]                       |	
+[0x0064]                       |	
+[0x0064]                       |	
+[0x0064]                       |			%def y0 20
+[0x0064]                       |			%def x0 50
+[0x0064]                       |			%def y_coeff 11
+[0x0064]                       |			%def x_coeff 3
+[0x0064]                       |	
+[0x0064] 47 01                 |	on_circle:	push rax
+[0x0066] 27 14 00 00 00        |			push y0
+[0x006b] 03                    |			sub
+[0x006c] 47 01                 |			push rax
+[0x006e] 27 14 00 00 00        |			push y0
+[0x0073] 03                    |			sub
+[0x0074] 05                    |			mul			; (y-y0)^2
+[0x0075] 27 0b 00 00 00        |			push y_coeff
+[0x007a] 05                    |			mul			; b(y-y0)^2
+[0x007b]                       |	
+[0x007b] 47 02                 |			push rbx
+[0x007d] 27 32 00 00 00        |			push x0
+[0x0082] 03                    |			sub
+[0x0083] 47 02                 |			push rbx
+[0x0085] 27 32 00 00 00        |			push x0
+[0x008a] 03                    |			sub
+[0x008b] 05                    |			mul			; (x-x0)^2
+[0x008c] 27 03 00 00 00        |			push 3			; a(x-x0)^2
+[0x0091] 05                    |			mul
+[0x0092]                       |	
+[0x0092] 01                    |			add			; a(x-x0)^2 + b(y-y0)^2
+[0x0093]                       |	
+[0x0093] 47 03                 |			push rcx
+[0x0095] 14                    |			dup
+[0x0096] 05                    |			mul
+[0x0097] 27 03 00 00 00        |			push x_coeff
+[0x009c] 05                    |			mul			; ar^2
+[0x009d] 11 a8 00 00 00        |			jle c_true
+[0x00a2]                       |	
+[0x00a2] 27 00 00 00 00        |			push 0			; a(x-x0)^2 + b(y-y0)^2 > ar^2
+[0x00a7] 13                    |			ret
+[0x00a8]                       |		
+[0x00a8] 27 01 00 00 00        |		c_true:	push 1			; a(x-x0)^2 + b(y-y0)^2 <= ar^2
+[0x00ad] 13                    |			ret
+[0x00ae]                       |	
+[0x00ae]                       |	
