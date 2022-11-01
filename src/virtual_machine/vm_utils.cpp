@@ -30,7 +30,7 @@ proc_state proc_ctor(const char* program_file)
     return {
         .program_length = hdr->header.opcnt,
         .mapping_size   = file_size,
-        .registers      = {0, 0, 0, 0, 0},
+        .registers      = {0, 0, 0, 0, 0, 0},
         .cmd            = (byte_t*)(bytes + HEADER_SIZE),
         .value_stack    = value_stack,
         .call_stack     = call_stack,
