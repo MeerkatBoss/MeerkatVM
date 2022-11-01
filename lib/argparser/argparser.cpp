@@ -17,9 +17,8 @@ int parse_args(size_t arg_count, const char* const* strargs, size_t tag_count, c
         LOG_ASSERT(strargs[i] != NULL, return -1);
         const arg_tag* tag = find_tag(strargs[i], tag_count, tags);
 
-        LOG_ASSERT_ERROR(
-            tag != NULL, return -1,
-            "Unknown command-line option: \'%s\'", strargs[i]);
+        if (tag == NULL)
+            return i;
 
         int call_result = tag->callback(strargs + i + 1);
 
@@ -30,7 +29,7 @@ int parse_args(size_t arg_count, const char* const* strargs, size_t tag_count, c
         i += tag->parameter_count;
     }
 
-    return 0;
+    return arg_count;
 }
 
 void print_help(size_t tag_count, const arg_tag* tags)

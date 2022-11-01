@@ -1,8 +1,7 @@
 #ifndef DISASM_UTILS_H
 #define DISASM_UTILS_H
 #include "assembler.h"
-
-const int MAX_LABELS = 256;
+#include "disasm_config.h"
 
 struct disasm_state
 {

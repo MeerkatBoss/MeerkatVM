@@ -160,7 +160,12 @@ static int disasm_label(disasm_state* state)
     int addr = 0;
     memcpy(&addr, (int*)(CMD + IP), sizeof(int));
     IP += sizeof(int);
-    LABELS[LAB_CNT++] = addr;
+    LOG_ASSERT_ERROR(LAB_CNT < MAX_LABELS, return -1,
+        "Too many labels.", NULL);
+
+    if (!find_label(addr, state))
+        LABELS[LAB_CNT++] = addr;
+
     fprintf(OUTPUT, ".0x%08lx\t", (unsigned long) addr);
     return 0;
 }
