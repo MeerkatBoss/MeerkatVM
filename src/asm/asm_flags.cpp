@@ -1,17 +1,6 @@
 #include "asm_flags.h"
 #include "logger.h"
-
-const char** output_file_addr_()
-{
-    static const char* _output_file = "a.out";
-    return &_output_file;
-}
-
-const char** listing_file_addr_()
-{
-    static const char* _listing_file = NULL;
-    return &_listing_file;
-}
+#include "asm_config.h"
 
 int set_output_file(const char* const * strargs)
 {
@@ -37,4 +26,52 @@ int add_listing(const char* const* strargs)
     LISTING_FILE = *strargs;
     called = 1;
     return 0;
+}
+
+int set_max_labels(const char* const *strargs)
+{
+    static int called = 0;
+
+    LOG_ASSERT(strargs != NULL, return -1);
+    LOG_ASSERT_ERROR(!called, return -1,
+        "Max label count specified more than once", NULL);
+
+    LOG_ASSERT_ERROR(sscanf(*strargs, "%zu", &MAX_LABELS) == 1,
+        return -1,
+        "Invalid value for max label count: '%s'", *strargs);
+    called = 1;
+
+    return 0;
+}
+
+int set_max_fixups(const char* const *strargs)
+{
+    static int called = 0;
+
+    LOG_ASSERT(strargs != NULL, return -1);
+    LOG_ASSERT_ERROR(!called, return -1,
+        "Max fixup count specified more than once", NULL);
+
+    LOG_ASSERT_ERROR(sscanf(*strargs, "%zu", &MAX_FIXUPS) == 1,
+        return -1,
+        "Invalid value for max fixup count: '%s'", *strargs);
+    called = 1;
+
+    return 0;
+}
+
+[[noreturn]]
+int show_help(const char* const*)
+{
+    const int name_width = -16; 
+
+    for (size_t i = 0; i < TAG_COUNT; i++)
+    {
+        printf("\033[1m-%c, --%*s\033[22m %s\n",
+            TAGS[i].short_tag,
+            name_width,
+            TAGS[i].long_tag,
+            TAGS[i].description);
+    }
+    exit(0);
 }

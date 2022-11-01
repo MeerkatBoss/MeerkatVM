@@ -34,11 +34,16 @@ int main(int argc, char** argv)
             .settings_mask = LGS_USE_ESCAPE | LGS_KEEP_OPEN
         });
 
-    LOG_ASSERT_ERROR(argc >= 2, return STATUS_INPUT_ERROR,
-        "Incorrect program usage", NULL);
-    int parsed = parse_args((size_t)argc - 2, argv + 1, TAG_COUNT, TAGS);
+    argc--;
+    argv++;
+
+    int parsed = parse_args((size_t)argc, argv, TAG_COUNT, TAGS);
     LOG_ASSERT_ERROR(parsed != -1, return STATUS_INPUT_ERROR,
         "Invalid command-line options", NULL);
+    LOG_ASSERT_ERROR(argc - parsed  >= 1, return STATUS_INPUT_ERROR,
+        "Input file not specified", NULL);
+    LOG_ASSERT_ERROR(argc - parsed  == 1, return STATUS_INPUT_ERROR,
+        "Too many files specified", NULL);
 
     const char* filepath = argv[argc - 1];
 

@@ -38,8 +38,6 @@ set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wa
     -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr\
     -pie -Wlarger-than=8192 -Wstack-usage=8192") 
 
-#set(ARGS "")
-
 add_subdirectory(lib/logger)
 
 add_subdirectory(lib/argparser)
@@ -56,13 +54,9 @@ add_subdirectory(src/disasm)
 
 add_subdirectory(src/virtual_machine)
 
-install(TARGETS asm disasm mbvm 
+install(TARGETS mbasm mbdisasm mbvm 
         RUNTIME
         CONFIGURATIONS Release)
-
-# add_custom_target(run
-#         COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && ${CMAKE_CURRENT_BINARY_DIR}/src/asm/asm $ENV{ARGS}
-#         DEPENDS asm)
 
 if(NOT TARGET uninstall)
   configure_file(

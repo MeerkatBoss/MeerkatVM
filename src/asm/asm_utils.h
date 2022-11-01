@@ -14,10 +14,11 @@
 
 #include "assembler.h"
 #include "text_lines.h"
+#include "asm_config.h"
 
 /**
  * @brief 
- * Asssembly result description
+ * Assembly result description
  */
 enum assembly_result : unsigned
 {
@@ -36,12 +37,6 @@ enum assembly_result : unsigned
     ASM_DEFOVF      = 01000,
     ASM_FIXOVF      = 02000
 };
-
-/**
- * @brief 
- * Maximum length of label name
- */
-const size_t MAX_LABEL_LEN = 32;
 
 /**
  * @brief 
@@ -72,18 +67,6 @@ struct asm_def
     char name[MAX_LABEL_LEN + 1];
     int  value;
 };
-
-/**
- * @brief 
- * Maximum allowed number of labels in a program
- */
-const size_t MAX_LABELS = 64;
-
-/**
- * @brief 
- * Maximum allowed number of unknown label references
- */
-const size_t MAX_FIXUPS = MAX_LABELS * 4;
 
 /**
  * @brief 
