@@ -13,11 +13,12 @@ struct disasm_state
     size_t  ip;
     long*   labels;
     size_t  label_cnt;
+    FILE*   output;
 };
 
-disasm_state* disasm_ctor(const char* filename);
+disasm_state* disasm_ctor(const char* input_file, const char* output_file);
 void disasm_dtor(disasm_state* state);
 
-int disassemble(const char* output_file, disasm_state* state);
+int disassemble(disasm_state* state);
 
 #endif
