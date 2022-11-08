@@ -9,3 +9,5 @@ target_link_libraries(mbasm PRIVATE libargparser liblogs libasm libinput)
 
 target_include_directories(mbasm PRIVATE
                     ${CMAKE_CURRENT_LIST_DIR})
+
+add_run_target(mbasm)

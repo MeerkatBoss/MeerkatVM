@@ -8,3 +8,5 @@ target_link_libraries(mbdisasm liblogs libasm libinput libargparser)
 
 target_include_directories(mbdisasm PRIVATE
                         ${CMAKE_CURRENT_LIST_DIR})
+
+add_run_target(mbdisasm)
