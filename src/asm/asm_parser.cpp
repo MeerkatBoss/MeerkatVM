@@ -537,16 +537,15 @@ static int asm_parse_name  (const char* str, assembly_state* state, byte_t* flag
     }
     
     asm_label* label_ptr = find_label(str, state);
-    if (label_ptr != NULL)
+    if (label_ptr != NULL && label_ptr->addr != ADDR_UNSET)
     {
         memcpy(CMD + IP, &label_ptr->addr, sizeof(int));
-        //*(int*)(CMD + IP) = label_ptr->addr;
         IP += sizeof(int);
         /* flags are not set for label */
         return 0;
     }
 
-    add_label(str, ADDR_UNSET, state);
+    if (label_ptr == NULL) add_label(str, ADDR_UNSET, state);
 
     LOG_ASSERT_ERROR(FX_CNT < MAX_FIXUPS,
         {STATE |= ASM_FIXOVF; return -1;},

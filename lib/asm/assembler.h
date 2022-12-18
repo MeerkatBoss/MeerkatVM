@@ -38,7 +38,7 @@ enum asm_reg : byte_t
 
 const size_t ARG_MAX = 1;
 
-const int REG_COUNT = 6;
+const int REG_COUNT = 8;
 const int MEM_SIZE  = 1 << 16;
 const int SCREEN_WIDTH  = 100;
 const int SCREEN_HEIGHT = 40;
@@ -103,7 +103,7 @@ const char STR_SIGN[5] = SIGNATURE;
  * @brief 
  * Latest command-set version
  */
-const unsigned int LATEST_VERSION = 7;
+const unsigned int LATEST_VERSION = 8;
 
 /**
  * @brief 
