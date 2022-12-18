@@ -545,14 +545,21 @@ static int asm_parse_name  (const char* str, assembly_state* state, byte_t* flag
         return 0;
     }
 
-    if (label_ptr == NULL) add_label(str, ADDR_UNSET, state);
+    size_t label_id = 0;    
+
+    if (label_ptr == NULL)
+    {
+        add_label(str, ADDR_UNSET, state);
+        label_id = LB_CNT - 1;
+    }
+    else label_id = (size_t)(label_ptr - LABELS);
 
     LOG_ASSERT_ERROR(FX_CNT < MAX_FIXUPS,
         {STATE |= ASM_FIXOVF; return -1;},
         "Maximum number of fixups exceeded", NULL);
     
     FIXUP[FX_CNT++] = {
-        .label_number = LB_CNT - 1,
+        .label_number = label_id,
         .addr = IP
     };
     memcpy(CMD + IP, &ADDR_UNSET, sizeof(int));
