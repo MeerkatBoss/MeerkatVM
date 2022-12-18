@@ -160,7 +160,7 @@ static void refresh_screen(const proc_state* cpu)
     {
         for (int j = 0; j < SCREEN_WIDTH; j++)
         {
-            if (RAM[i*SCREEN_WIDTH + j])
+            if (RAM[REGS[REG_VBP] + i*SCREEN_WIDTH + j])
                 putc('#', stdout);
             else
                 putc('.', stdout);

@@ -40,8 +40,8 @@ const size_t ARG_MAX = 1;
 
 const int REG_COUNT = 8;
 const int MEM_SIZE  = 1 << 16;
-const int SCREEN_WIDTH  = 100;
-const int SCREEN_HEIGHT = 40;
+const int SCREEN_WIDTH  = 101;
+const int SCREEN_HEIGHT = 41;
 
 /**
  * @brief 
@@ -103,7 +103,7 @@ const char STR_SIGN[5] = SIGNATURE;
  * @brief 
  * Latest command-set version
  */
-const unsigned int LATEST_VERSION = 8;
+const unsigned int LATEST_VERSION = 9;
 
 /**
  * @brief 
