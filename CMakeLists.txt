@@ -7,7 +7,7 @@ project(vcpu VERSION 1.0)
 
 include(run.cmake)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wall -Wextra\
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wall -Wextra\
     -Weffc++ -Waggressive-loop-optimizations -Wc++14-compat -Wmissing-declarations\
     -Wcast-align -Wcast-qual -Wchar-subscripts -Wconditionally-supported -Wconversion\
     -Wctor-dtor-privacy -Wempty-body -Wfloat-equal -Wformat-nonliteral -Wformat-security\
@@ -23,7 +23,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wall -We
     -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr\
     -pie -Wlarger-than=8192 -Wstack-usage=8192") 
 
-set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wall -Wextra\
+set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wall -Wextra\
     -Weffc++ -Waggressive-loop-optimizations -Wc++14-compat -Wmissing-declarations\
     -Wcast-align -Wcast-qual -Wchar-subscripts -Wconditionally-supported -Wconversion\
     -Wctor-dtor-privacy -Wempty-body -Wfloat-equal -Wformat-nonliteral -Wformat-security\
@@ -38,6 +38,9 @@ set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS}-D _DEBUG -ggdb3 -std=c++2a -O0 -Wa
     -fstack-protector -fstrict-overflow -flto-odr-type-merging -fno-omit-frame-pointer -fPIE\
     -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr\
     -pie -Wlarger-than=8192 -Wstack-usage=8192") 
+  
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS}-D NLOGS -std=c++2a -Ofast -Wall")
+set(CMAKE_LINKER_FLAGS_RELEASE "${CMAKE_CXX_FLAGS}-D NLOGS -std=c++2a -Ofast -Wall")
 
 add_subdirectory(lib/logger)
 
@@ -55,9 +58,9 @@ add_subdirectory(src/disasm)
 
 add_subdirectory(src/virtual_machine)
 
-install(TARGETS mbasm mbdisasm mbvm 
-        RUNTIME
-        CONFIGURATIONS Release)
+install(TARGETS mbasm mbdisasm mbvm
+        CONFIGURATIONS Release
+        RUNTIME)
 
 if(NOT TARGET uninstall)
   configure_file(

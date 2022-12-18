@@ -15,7 +15,9 @@ enum status
 
 int main(int argc, char** argv)
 {
+#ifndef NLOGS
     add_default_file_logger();
+#endif
     add_logger(
         {
             .name = "Console output",
