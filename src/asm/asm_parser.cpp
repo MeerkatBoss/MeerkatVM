@@ -227,14 +227,13 @@ static int asm_parse_def(const char* str, assembly_state* state)
 
     int value = 0;
     int n_read = 0;
-
     int success = sscanf(str, " %%def %s %d%n", BUFFER, &value, &n_read);
 
     LOG_ASSERT_ERROR(success == 2, 
         { STATE |= ASM_WDEF; return -1;},
         "{%zu} Malformed constant definition",
         LINE_NUM + 1);
-    LOG_ASSERT_ERROR(strempty(BUFFER + n_read), 
+    LOG_ASSERT_ERROR(strempty(str + n_read),
         { STATE |= ASM_WDEF; return -1;},
         "{%zu} Malformed constant definition",
         LINE_NUM + 1);
